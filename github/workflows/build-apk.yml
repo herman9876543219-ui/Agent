@@ -1,0 +1,338 @@
+name: Build Nova APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "www/**"
+      - "package.json"
+      - "capacitor.config.json"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Add Nova native code
+        run: |
+          JAVA_DIR=android/app/src/main/java/com/nova/assistant
+          mkdir -p "$JAVA_DIR"
+
+          cat > "$JAVA_DIR/MainActivity.java" << 'JAVAEOF'
+          package com.nova.assistant;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(NovaPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          JAVAEOF
+
+          cat > "$JAVA_DIR/NovaService.java" << 'JAVAEOF'
+          package com.nova.assistant;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.app.Service;
+          import android.content.Intent;
+          import android.content.pm.ServiceInfo;
+          import android.os.Build;
+          import android.os.IBinder;
+
+          public class NovaService extends Service {
+              private static final String CHANNEL = "nova_listening";
+
+              @Override
+              public int onStartCommand(Intent intent, int flags, int startId) {
+                  NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Nova", NotificationManager.IMPORTANCE_LOW));
+                  }
+                  Intent open = new Intent(this, MainActivity.class);
+                  open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent pi = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
+                  b.setContentTitle("Nova is listening")
+                   .setContentText("Tap to open Nova")
+                   .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+                   .setOngoing(true)
+                   .setContentIntent(pi);
+                  Notification n = b.build();
+                  if (Build.VERSION.SDK_INT >= 29) {
+                      startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+                  } else {
+                      startForeground(1, n);
+                  }
+                  return START_STICKY;
+              }
+
+              @Override
+              public IBinder onBind(Intent intent) { return null; }
+          }
+          JAVAEOF
+
+          cat > "$JAVA_DIR/NovaPlugin.java" << 'JAVAEOF'
+          package com.nova.assistant;
+
+          import android.Manifest;
+          import android.content.Intent;
+          import android.database.Cursor;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.provider.ContactsContract;
+          import android.provider.Settings;
+          import android.speech.tts.TextToSpeech;
+          import android.speech.tts.UtteranceProgressListener;
+          import androidx.core.content.ContextCompat;
+          import com.getcapacitor.JSArray;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.PermissionState;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.annotation.Permission;
+          import com.getcapacitor.annotation.PermissionCallback;
+          import java.util.Locale;
+
+          @CapacitorPlugin(
+              name = "Nova",
+              permissions = {
+                  @Permission(strings = { Manifest.permission.READ_CONTACTS }, alias = "contacts"),
+                  @Permission(strings = { Manifest.permission.CALL_PHONE }, alias = "call"),
+                  @Permission(strings = { Manifest.permission.POST_NOTIFICATIONS }, alias = "notif")
+              }
+          )
+          public class NovaPlugin extends Plugin {
+              private TextToSpeech tts;
+              private boolean ttsReady = false;
+
+              @Override
+              public void load() {
+                  tts = new TextToSpeech(getContext(), status -> {
+                      if (status == TextToSpeech.SUCCESS) {
+                          tts.setLanguage(Locale.US);
+                          ttsReady = true;
+                      }
+                  });
+              }
+
+              // ---- Speaking ----
+              @PluginMethod
+              public void speak(PluginCall call) {
+                  if (!ttsReady) { call.resolve(); return; }
+                  final String text = call.getString("text", "");
+                  final String id = "u" + System.currentTimeMillis();
+                  tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                      @Override public void onStart(String utteranceId) {}
+                      @Override public void onDone(String utteranceId) { call.resolve(); }
+                      @Override public void onError(String utteranceId) { call.resolve(); }
+                  });
+                  tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, id);
+              }
+
+              @PluginMethod
+              public void stopSpeaking(PluginCall call) {
+                  if (tts != null) tts.stop();
+                  call.resolve();
+              }
+
+              // ---- Background service ----
+              @PluginMethod
+              public void startService(PluginCall call) {
+                  if (Build.VERSION.SDK_INT >= 33 && getPermissionState("notif") != PermissionState.GRANTED) {
+                      requestPermissionForAlias("notif", call, "notifPerm");
+                      return;
+                  }
+                  beginService(call);
+              }
+
+              @PermissionCallback
+              private void notifPerm(PluginCall call) { beginService(call); }
+
+              private void beginService(PluginCall call) {
+                  try {
+                      Intent i = new Intent(getContext(), NovaService.class);
+                      ContextCompat.startForegroundService(getContext(), i);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject("Could not start background service: " + e.getMessage());
+                  }
+              }
+
+              @PluginMethod
+              public void stopService(PluginCall call) {
+                  getContext().stopService(new Intent(getContext(), NovaService.class));
+                  call.resolve();
+              }
+
+              @PluginMethod
+              public void batterySettings(PluginCall call) {
+                  try {
+                      Intent i = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      getContext().startActivity(i);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(e.getMessage());
+                  }
+              }
+
+              // ---- Contacts ----
+              @PluginMethod
+              public void findContact(PluginCall call) {
+                  if (getPermissionState("contacts") != PermissionState.GRANTED) {
+                      requestPermissionForAlias("contacts", call, "contactsPerm");
+                      return;
+                  }
+                  doFind(call);
+              }
+
+              @PermissionCallback
+              private void contactsPerm(PluginCall call) {
+                  if (getPermissionState("contacts") == PermissionState.GRANTED) doFind(call);
+                  else call.reject("Contacts permission denied");
+              }
+
+              private void doFind(PluginCall call) {
+                  String q = call.getString("name", "");
+                  JSArray matches = new JSArray();
+                  Cursor c = null;
+                  try {
+                      c = getContext().getContentResolver().query(
+                          ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                          new String[] {
+                              ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                              ContactsContract.CommonDataKinds.Phone.NUMBER
+                          },
+                          ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?",
+                          new String[] { "%" + q + "%" },
+                          ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+                      );
+                      int count = 0;
+                      while (c != null && c.moveToNext() && count < 5) {
+                          JSObject o = new JSObject();
+                          o.put("name", c.getString(0));
+                          o.put("number", c.getString(1));
+                          matches.put(o);
+                          count++;
+                      }
+                  } catch (Exception e) {
+                      call.reject(e.getMessage());
+                      return;
+                  } finally {
+                      if (c != null) c.close();
+                  }
+                  JSObject res = new JSObject();
+                  res.put("matches", matches);
+                  call.resolve(res);
+              }
+
+              // ---- Calling ----
+              @PluginMethod
+              public void callNumber(PluginCall call) {
+                  if (getPermissionState("call") != PermissionState.GRANTED) {
+                      requestPermissionForAlias("call", call, "callPerm");
+                      return;
+                  }
+                  doCall(call);
+              }
+
+              @PermissionCallback
+              private void callPerm(PluginCall call) {
+                  if (getPermissionState("call") == PermissionState.GRANTED) doCall(call);
+                  else call.reject("Call permission denied");
+              }
+
+              private void doCall(PluginCall call) {
+                  try {
+                      String number = call.getString("number", "");
+                      Intent i = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Uri.encode(number)));
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      getContext().startActivity(i);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(e.getMessage());
+                  }
+              }
+
+              // ---- Open links / apps ----
+              @PluginMethod
+              public void openUrl(PluginCall call) {
+                  try {
+                      Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(call.getString("url", "")));
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      getContext().startActivity(i);
+                      call.resolve();
+                  } catch (Exception e) {
+                      call.reject(e.getMessage());
+                  }
+              }
+          }
+          JAVAEOF
+
+      - name: Patch Android manifest
+        run: |
+          python3 - << 'PYEOF'
+          p = "android/app/src/main/AndroidManifest.xml"
+          m = open(p).read()
+          perms = """
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.READ_CONTACTS" />
+              <uses-permission android:name="android.permission.CALL_PHONE" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
+              <queries>
+                  <intent><action android:name="android.speech.RecognitionService" /></intent>
+                  <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+              </queries>
+          """
+          m = m.replace("<application", perms + "\n    <application", 1)
+          service = '    <service android:name=".NovaService" android:exported="false" android:foregroundServiceType="microphone" />\n    </application>'
+          m = m.replace("</application>", service, 1)
+          open(p, "w").write(m)
+          print(m)
+          PYEOF
+
+      - name: Sync web files
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nova-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          

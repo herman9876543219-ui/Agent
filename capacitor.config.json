@@ -1,8 +1,0 @@
-{
-  "appId": "com.nova.assistant",
-  "appName": "Nova",
-  "webDir": "www",
-  "plugins": {
-    "CapacitorHttp": { "enabled": true }
-  }
-}

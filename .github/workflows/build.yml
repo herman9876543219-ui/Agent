@@ -25,8 +25,7 @@ jobs:
 
       - name: Create Capacitor project
         run: |
-          mkdir -p www assets
-          cp index.html www/index.html
+          mkdir -p www asset
           cp icon-only.png icon-foreground.png icon-background.png assets/
           npm init -y
           npm install --legacy-peer-deps @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/app-launcher@7 @capacitor-community/contacts@7 @capacitor-community/speech-recognition@7

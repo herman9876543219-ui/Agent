@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#03100A">
+<title>Nova</title>
+<style>
+  :root{
+    --bg:#03100A; --panel:#071F16; --line:#0E4A33;
+    --green:#19F58B; --gold:#FFC81E; --text:#EFFFF6; --mute:#7FB59C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    color:var(--text);
+    font-family:"Trebuchet MS","Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    background:
+      radial-gradient(circle at 25% 25%, rgba(255,200,30,.07) 0 5px, transparent 6px) 0 0/44px 44px,
+      radial-gradient(circle at 75% 75%, rgba(25,245,139,.07) 0 4px, transparent 5px) 0 0/44px 44px,
+      radial-gradient(ellipse at 50% -10%, #0B3D29 0%, var(--bg) 62%);
+    background-color:var(--bg);
+  }
+  header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px}
+  .brand{display:flex;flex-direction:column;line-height:1}
+  .brand h1{
+    font-size:28px;font-weight:900;letter-spacing:7px;
+    background:linear-gradient(90deg,var(--gold),var(--green));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .brand span{font-size:12px;color:var(--mute);letter-spacing:1.5px;margin-top:5px}
+  header button{
+    background:rgba(255,200,30,.08);border:1px solid rgba(255,200,30,.6);color:var(--gold);
+    border-radius:999px;padding:9px 16px;font-size:14px;font-weight:700;min-height:40px;
+  }
+  .flag{display:flex;height:4px;margin:0 18px;border-radius:4px;overflow:hidden;box-shadow:0 0 12px rgba(25,245,139,.45)}
+  .flag i{flex:1}
+  .flag i:nth-child(1),.flag i:nth-child(3){background:#00a860}
+  .flag i:nth-child(2){background:#f4fff9}
+  #log{flex:1;overflow-y:auto;padding:14px 18px 8px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:86%;padding:11px 15px;border-radius:18px;line-height:1.45;font-size:16px;white-space:pre-wrap;word-wrap:break-word}
+  .me{align-self:flex-end;background:rgba(255,200,30,.1);border:1px solid rgba(255,200,30,.55);color:#FFF1C2;border-bottom-right-radius:5px}
+  .nova{align-self:flex-start;background:rgba(25,245,139,.08);border:1px solid rgba(25,245,139,.5);box-shadow:0 0 16px rgba(25,245,139,.12);border-bottom-left-radius:5px}
+  .sys{align-self:center;color:var(--mute);font-size:14px;text-align:center}
+  .empty{margin:auto;text-align:center;color:var(--mute);line-height:1.65;padding:0 18px}
+  .empty h2{font-size:26px;color:var(--text);margin-bottom:6px;letter-spacing:1px}
+  .empty h2 em{font-style:normal;color:var(--gold)}
+  .empty b{color:var(--green);font-weight:600}
+  #heard{min-height:22px;text-align:center;color:var(--gold);font-size:15px;padding:0 18px}
+  #stage{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 10px}
+  #orb{
+    position:relative;width:108px;height:108px;border-radius:50%;cursor:pointer;
+    border:3px solid var(--gold);
+    background:radial-gradient(circle at 35% 30%,#D9FFEC,var(--green) 38%,#0A8F52 74%,#064B2C 100%);
+    box-shadow:0 0 30px rgba(25,245,139,.55),inset 0 0 20px rgba(255,255,255,.25);
+    transition:transform .15s;
+  }
+  #orb:active{transform:scale(.94)}
+  #orb::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid transparent}
+  #orb.listening{
+    border-color:var(--green);
+    background:radial-gradient(circle at 35% 30%,#FFF1BF,var(--gold) 40%,#B88200 78%,#5C4100 100%);
+    animation:ripple 1.3s infinite;
+  }
+  #orb.thinking{animation:ripple 0.75s infinite;filter:saturate(.7)}
+  #orb.thinking::after{border-top-color:var(--gold);border-right-color:var(--green);animation:spin 0.9s linear infinite}
+  #orb.speaking{animation:ripple 1.8s infinite}
+  @keyframes ripple{0%{box-shadow:0 0 0 0 rgba(255,200,30,.55),0 0 30px rgba(25,245,139,.5)}100%{box-shadow:0 0 0 34px rgba(255,200,30,0),0 0 30px rgba(25,245,139,.5)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){#orb,#orb::after{animation:none!important}}
+  #status{font-size:14px;color:var(--mute);letter-spacing:.5px}
+  #chips{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto;scrollbar-width:none}
+  #chips::-webkit-scrollbar{display:none}
+  #chips button{
+    flex:none;background:rgba(25,245,139,.07);border:1px solid rgba(25,245,139,.45);color:var(--green);
+    border-radius:999px;padding:9px 15px;font-size:14px;font-weight:600;min-height:40px;
+  }
+  #bar{display:flex;gap:8px;padding:0 14px 12px}
+  #bar input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:16px;padding:13px 15px;font-size:16px;outline:none;min-height:48px}
+  #bar input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  #bar button{background:linear-gradient(135deg,var(--gold),#FFB000);color:#2A1D00;border:none;border-radius:16px;padding:0 20px;font-weight:800;font-size:16px;min-height:48px}
+  #panel{display:none;background:var(--panel);border-top:1px solid var(--line);padding:14px 18px;gap:12px;flex-direction:column}
+  #panel.open{display:flex}
+  #panel label{font-size:14px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+  #panel input[type=password],#panel input[type=text]{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px;font-size:16px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:16px}
+  .row small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
+  #panel .save{background:linear-gradient(135deg,var(--green),#0FBF6A);color:#032014;border:none;border-radius:12px;padding:12px;font-weight:800;font-size:15px}
+  input[type=checkbox]{width:22px;height:22px;accent-color:var(--green)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><h1>NOVA</h1><span>YOUR VOICE ASSISTANT</span></div>
+  <button id="gear" aria-label="Settings">Settings</button>
+</header>
+<div class="flag"><i></i><i></i><i></i></div>
+
+<section id="panel">
+  <label>Groq API key (for open questions)
+    <input type="password" id="key" placeholder="gsk_..." autocomplete="off">
+  </label>
+  <label>Wake word
+    <input type="text" id="wakeword" value="nova" autocomplete="off">
+  </label>
+  <div class="row">
+    <div>Hands-free mode<small>Say the wake word, then your request. Page must stay open.</small></div>
+    <input type="checkbox" id="wake">
+  </div>
+  <button class="save" id="save">Save</button>
+</section>
+
+<main id="log">
+  <div class="empty" id="empty">
+    <h2>I dey <em>listen</em></h2>
+    Tap the orb and speak, or type below.<br><br>
+    Try: <b>"open WhatsApp"</b>, <b>"call Chidi"</b>, <b>"play Burna Boy"</b>, <b>"navigate to Ikeja"</b>, <b>"set a timer for 5 minutes"</b>, or ask anything.
+  </div>
+</main>
+
+<div id="heard"></div>
+<div id="stage">
+  <button id="orb" aria-label="Talk to Nova"></button>
+  <div id="status">Ready</div>
+</div>
+
+<div id="chips">
+  <button data-t="open ">Open app</button>
+  <button data-t="call ">Call</button>
+  <button data-t="whatsapp ">WhatsApp</button>
+  <button data-t="play ">Play</button>
+  <button data-t="navigate to ">Navigate</button>
+  <button data-t="set a timer for ">Timer</button>
+</div>
+
+<div id="bar">
+  <input id="txt" type="text" placeholder="Type a request" autocomplete="off" enterkeyhint="send">
+  <button id="send">Send</button>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const log=$('log'), orb=$('orb'), statusEl=$('status'), heardEl=$('heard');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+
+  const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const P = name => (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+
+  const store = {
+    get(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:v }catch(e){ return d } },
+    set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+  };
+
+  let apiKey = store.get('nova_key','');
+  let model = store.get('nova_model','');
+  let wakeWord = (store.get('nova_wakeword','nova')||'nova').toLowerCase();
+  let wakeOn = store.get('nova_wake','0')==='1';
+  let history = [];
+  let speaking=false, awaiting=false, recActive=false, tapMode=false, rec=null;
+  let timers = [];
+
+  $('key').value = apiKey; $('wakeword').value = wakeWord; $('wake').checked = wakeOn;
+
+  /* ---------- UI helpers ---------- */
+  function setState(s,label){
+    orb.className = s==='idle' ? '' : s;
+    statusEl.textContent = label || ({idle:'Ready',listening:'Listening',thinking:'Thinking',speaking:'Speaking'}[s]);
+  }
+  function add(cls,text){
+    const e=$('empty'); if(e) e.remove();
+    const d=document.createElement('div'); d.className='msg '+cls; d.textContent=text;
+    log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+  }
+  function sys(text){
+    const e=$('empty'); if(e) e.remove();
+    const d=document.createElement('div'); d.className='sys'; d.textContent=text;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+  }
+
+  /* ---------- Speech output ---------- */
+  function clean(t){ return t.replace(/[*_`#>]/g,'').replace(/\s+/g,' ').trim(); }
+  function speak(text){
+    if(!synth){ return; }
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(clean(text));
+    u.rate=1.02;
+    u.onstart=()=>{ speaking=true; stopRec(); setState('speaking'); };
+    const done=()=>{ speaking=false; setState('idle'); if(wakeOn || awaiting) startRec(); };
+    u.onend=done; u.onerror=done;
+    synth.speak(u);
+  }
+  function reply(text){ add('nova',text); speak(text); }
+
+  /* ---------- Speech input ---------- */
+  function buildRec(){
+    const r=new SR();
+    r.lang='en-US'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
+    r.onstart=()=>{ recActive=true; setState('listening', wakeOn&&!tapMode ? 'Waiting for "'+wakeWord+'"' : 'Listening'); };
+    r.onresult=e=>{
+      let interim='',fin='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) fin+=t; else interim+=t;
+      }
+      if(interim && (tapMode||awaiting)) heardEl.textContent=interim;
+      if(fin) onHeard(fin.trim());
+    };
+    r.onerror=e=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+        wakeOn=false; $('wake').checked=false; store.set('nova_wake','0');
+        sys('Microphone blocked. Allow mic access for this page in Chrome site settings, or type your request.');
+      }
+    };
+    r.onend=()=>{
+      recActive=false; heardEl.textContent='';
+      if(!speaking && statusEl.textContent!=='Thinking') setState('idle');
+      if(wakeOn && !speaking && !tapMode) setTimeout(startRec,250);
+    };
+    return r;
+  }
+  function startRec(){
+    if(!SR){ sys('Voice input is not supported in this browser. Use Chrome on Android, or type.'); return; }
+    if(recActive || speaking) return;
+    try{ rec=buildRec(); rec.start(); }catch(e){}
+  }
+  function stopRec(){ try{ if(rec) rec.abort(); }catch(e){} recActive=false; }
+
+  function onHeard(text){
+    heardEl.textContent='';
+    if(tapMode){ tapMode=false; handle(text); return; }
+    const low=text.toLowerCase();
+    if(awaiting){ awaiting=false; handle(text); return; }
+    const i=low.indexOf(wakeWord);
+    if(wakeOn && i>=0){
+      const cmd=text.slice(i+wakeWord.length).replace(/^[\s,.!?]+/,'').trim();
+      if(cmd){ handle(cmd); }
+      else { awaiting=true; reply('Yes?'); }
+    }
+  }
+
+  /* ---------- Commands that run on the phone ---------- */
+  function openUrl(url){
+    const AL=P('AppLauncher');
+    if(NATIVE && AL){ AL.openUrl({url:url}).catch(()=>sys('Could not open that app.')); }
+    else { window.location.href=url; }
+  }
+
+  /* ---------- Contacts (native app only) ---------- */
+  let contactCache=null;
+  async function loadContacts(){
+    if(contactCache) return contactCache;
+    const C=P('Contacts');
+    if(!C) throw new Error('Contacts are only available in the Nova app.');
+    const perm=await C.requestPermissions();
+    if(perm && perm.contacts && perm.contacts!=='granted') throw new Error('Contacts permission was denied. Allow it for Nova in Android settings.');
+    const res=await C.getContacts({projection:{name:true,phones:true}});
+    contactCache=(res.contacts||[]).map(c=>({
+      name:(c.name&&(c.name.display||[c.name.given,c.name.family].filter(Boolean).join(' ')))||'',
+      phones:(c.phones||[]).map(p=>p.number).filter(Boolean)
+    })).filter(c=>c.name&&c.phones.length);
+    return contactCache;
+  }
+  function findContact(q){
+    q=q.toLowerCase().trim(); if(!q) return null;
+    let best=null,score=0;
+    for(const c of contactCache){
+      const n=c.name.toLowerCase(); let sc=0;
+      if(n===q) sc=100; else if(n.startsWith(q)) sc=80; else if(n.split(/\s+/).some(w=>w===q)) sc=70; else if(n.includes(q)) sc=50;
+      if(sc>score){score=sc;best=c;}
+    }
+    return best;
+  }
+  function waNum(n){
+    const d=n.replace(/[^\d+]/g,'');
+    if(d.startsWith('+')) return d.slice(1);
+    if(d.startsWith('00')) return d.slice(2);
+    if(d.startsWith('0')) return '234'+d.slice(1);
+    return d;
+  }
+  async function contactAction(kind,name,msg){
+    try{ await loadContacts(); }catch(e){ return e.message||'I could not read your contacts.'; }
+    const c=findContact(name);
+    if(!c) return 'I could not find '+name+' in your contacts.';
+    const raw=c.phones[0], plain=raw.replace(/[^\d+]/g,'');
+    if(kind==='call'){ setTimeout(()=>openUrl('tel:'+plain),700); return 'Calling '+c.name+'.'; }
+    if(kind==='sms'){ setTimeout(()=>openUrl('sms:'+plain+(msg?'?body='+encodeURIComponent(msg):'')),700); return 'Opening a text to '+c.name+'.'; }
+    setTimeout(()=>openUrl('whatsapp://send?phone='+waNum(raw)+(msg?'&text='+encodeURIComponent(msg):'')),700);
+    return 'Opening WhatsApp for '+c.name+'.';
+  }
+
+  /* ---------- Installed apps (native app only) ---------- */
+  let appCache=null;
+  async function loadApps(){
+    if(appCache) return appCache;
+    const A=P('Apps');
+    if(!A) throw new Error('Opening apps by name only works in the Nova app.');
+    const r=await A.list();
+    appCache=(r.apps||[]).map(a=>({name:a.name,pkg:a.pkg,low:(a.name||'').toLowerCase()}));
+    return appCache;
+  }
+  function findApp(apps,q){
+    q=q.toLowerCase().trim(); if(!q) return null;
+    let best=null,score=0;
+    for(const a of apps){
+      let sc=0;
+      if(a.low===q) sc=100; else if(a.low.startsWith(q)) sc=80; else if(a.low.split(/\s+/).some(w=>w===q)) sc=70; else if(a.low.includes(q)) sc=50; else if(q.includes(a.low) && a.low.length>3) sc=40;
+      if(sc>score){score=sc;best=a;}
+    }
+    return best;
+  }
+  async function openApp(name){
+    let apps;
+    try{ apps=await loadApps(); }catch(e){ return e.message; }
+    const a=findApp(apps,name);
+    if(!a) return null;
+    setTimeout(()=>{ P('Apps').launch({pkg:a.pkg}).catch(()=>sys('Could not open '+a.name+'.')); },700);
+    return 'Opening '+a.name+'.';
+  }
+
+  /* ---------- Native speech (native app only) ---------- */
+  async function nativeListen(){
+    const S=P('SpeechRecognition');
+    if(!S){ sys('Speech plugin is missing in this build.'); return; }
+    try{
+      try{ await (S.requestPermissions ? S.requestPermissions() : S.requestPermission()); }catch(e){}
+      setState('listening');
+      const r=await S.start({language:'en-US',maxResults:1,prompt:'Speak to Nova',partialResults:false,popup:true});
+      setState('idle');
+      const said=r&&r.matches&&r.matches[0];
+      if(said) handle(said);
+    }catch(e){
+      setState('idle');
+      sys('Could not listen: '+((e&&e.message)||e));
+    }
+      }
+  function num(s){ return s.replace(/[^\d+]/g,''); }
+
+  function parseDuration(t){
+    let ms=0,m;
+    const re=/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?)/g;
+    while((m=re.exec(t))){
+      const n=parseFloat(m[1]), u=m[2][0];
+      ms += u==='h'? n*3600000 : u==='m'? n*60000 : n*1000;
+    }
+    return ms;
+  }
+  function fmtDur(ms){
+    const s=Math.round(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), x=s%60;
+    const p=[]; if(h)p.push(h+(h>1?' hours':' hour')); if(m)p.push(m+(m>1?' minutes':' minute')); if(x)p.push(x+(x>1?' seconds':' second'));
+    return p.join(' ');
+  }
+
+  function local(raw){
+    const lowRaw=raw.toLowerCase();
+    const t=lowRaw.replace(/[?!.,]+$/,'').trim()
+      .replace(/^(hey |ok |okay )?nova[,\s]+/,'')
+      .replace(/^(please|can you|could you|would you|i want you to|i want to|i wanna|go to [a-z ]+? and)\s+/,'')
+      .replace(/\s+please$/,'').trim();
+    let m;
+
+    if((/\btime\b/.test(t) && /\b(what|tell|current|now)\b/.test(t) && !/timer/.test(t)) || /^time$/.test(t))
+      return 'It is '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})+'.';
+    if(/(what('?s| is)|tell me) (the |today'?s )?(date|day)|what day is it|today'?s date/.test(t))
+      return 'Today is '+new Date().toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'})+'.';
+
+    if((m=t.match(/(?:set|start|create)?\s*(?:a |an )?(?:timer|alarm|reminder)\s*(?:for|in)\s+(.+)/)) ){
+      const ms=parseDuration(m[1]);
+      if(ms>0){
+        const label=fmtDur(ms);
+        const id=setTimeout(()=>{ reply('Your '+label+' timer is done.'); try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){} },ms);
+        timers.push(id);
+        return 'Timer set for '+label+'. Keep this page open so I can tell you when it ends.';
+      }
+    }
+    if(/^(cancel|stop|clear) (all )?(my )?timers?$/.test(t)){ timers.forEach(clearTimeout); timers=[]; return 'Timers cleared.'; }
+
+    if(NATIVE && (m=t.match(/^(?:open|launch|start|run)\s+(?:the\s+|my\s+)?(.+?)(?:\s+app)?$/))){
+      return openApp(m[1]).then(r=>r||'I could not find an app called '+m[1]+'.');
+    }
+    if(NATIVE){
+      if((m=t.match(/^(?:call|dial|phone)\s+(?!\d)(.+)$/))) return contactAction('call',m[1]);
+      if((m=t.match(/^(?:text|sms)\s+(?!\d)(.+?)(?:\s+(?:saying|that says|that)\s+(.*))?$/))) return contactAction('sms',m[1],m[2]);
+      if((m=t.match(/^(?:whatsapp|send (?:a )?whatsapp(?: message)? to|message)\s+(?!\d)(.+?)(?:\s+(?:saying|that says|that)\s+(.*))?$/))) return contactAction('wa',m[1],m[2]);
+    }
+    if((m=t.match(/^(?:call|dial|phone)\s+(?:number\s+)?([\d\s+\-()]{6,})$/))){
+      const n=num(m[1]); setTimeout(()=>openUrl('tel:'+n),900); return 'Calling '+n.split('').join(' ')+'.';
+    }
+    if((m=t.match(/^(?:whatsapp|send (?:a )?whatsapp(?: message)? to|message)\s+([\d\s+\-()]{7,})\s*(?:saying|that says|:)?\s*(.*)$/))){
+      const n=num(m[1]).replace(/^\+/,''); const body=m[2]?'?text='+encodeURIComponent(m[2]):'';
+      setTimeout(()=>openUrl('https://wa.me/'+n+body),900); return 'Opening WhatsApp for '+n+'.';
+    }
+    if((m=t.match(/^(?:navigate|directions?|take me|route)(?: me)?(?: to| from here to)?\s+(.+)/)) || (m=t.match(/^(?:how do i get|where is)\s+(?:to\s+)?(.+)/))){
+      setTimeout(()=>openUrl('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(m[1])+'&travelmode=driving'),900);
+      return 'Getting directions to '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:play|put on|listen to)\s+(?:me\s+|some\s+|us\s+)?(.+?)(?:\s+on\s+(?:youtube(?: music)?|spotify))?$/))){
+      const music=/music|spotify/.test(lowRaw);
+      const url=(music?'https://music.youtube.com/search?q=':'https://www.youtube.com/results?search_query=')+encodeURIComponent(m[1]);
+      setTimeout(()=>openUrl(url),900);
+      return 'Playing '+m[1]+(music?' on YouTube Music.':' on YouTube.');
+    }
+    if((m=t.match(/^open\s+(youtube|google|whatsapp|facebook|instagram|twitter|x|tiktok|gmail|maps|spotify)$/))){
+      const map={youtube:'https://m.youtube.com',google:'https://www.google.com',whatsapp:'https://web.whatsapp.com',facebook:'https://m.facebook.com',instagram:'https://www.instagram.com',twitter:'https://x.com',x:'https://x.com',tiktok:'https://www.tiktok.com',gmail:'https://mail.google.com',maps:'https://maps.google.com',spotify:'https://open.spotify.com'};
+      setTimeout(()=>openUrl(map[m[1]]),900); return 'Opening '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:search|google|look up|search for|search google for)\s+(.+)/))){
+      setTimeout(()=>openUrl('https://www.google.com/search?q='+encodeURIComponent(m[1])),900);
+      return 'Searching for '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:what is|what's|calculate|compute)\s+([\d\s+\-*/().x×÷%^]+)$/)) && /\d/.test(m[1]) && /[+\-*/x×÷^%]/.test(m[1])){
+      try{
+        const expr=m[1].replace(/x|×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+        if(/^[\d\s+\-*/().%]+$/.test(expr)){ const v=Function('"use strict";return ('+expr+')')(); if(isFinite(v)) return m[1].trim()+' equals '+(+v.toFixed(6))+'.'; }
+      }catch(e){}
+    }
+    if(/^(hi|hello|hey)( nova)?$/.test(t)) return 'Hello! What can I do for you?';
+    if(/^(thanks|thank you)( nova)?$/.test(t)) return 'You are welcome.';
+    if(/who are you|what('?s| is) your name/.test(t)) return 'I am Nova, your assistant. I can set timers, call, message on WhatsApp, navigate, play music, search, and answer questions.';
+    return null;
+  }
+
+  /* ---------- Open questions go to Groq ---------- */
+  async function getModel(){
+    if(model) return model;
+    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+apiKey}});
+    if(r.status===401) throw new Error('Your Groq API key was rejected. Check it in Settings.');
+    if(!r.ok) throw new Error('Groq model list failed ('+r.status+').');
+    const d=await r.json();
+    const ids=(d.data||[]).map(x=>x.id).filter(id=>!/whisper|guard|tts|playai|distil|embed|vision|prompt|orpheus/i.test(id));
+    const pref=['llama-3.3-70b-versatile','llama-3.1-8b-instant'];
+    model=pref.find(p=>ids.includes(p)) || ids.find(id=>/llama|gpt-oss|qwen/i.test(id)) || ids[0];
+    if(!model) throw new Error('Groq shows no usable chat model on this key.');
+    store.set('nova_model',model);
+    return model;
+  }
+
+  async function ask(text){
+    if(!apiKey) return 'I can handle timers, calls, WhatsApp, directions, music and searches now. For open questions, add your Groq API key in Settings.';
+    history.push({role:'user',content:text});
+    history = history.slice(-12);
+    const body={
+      model:await getModel(),
+      temperature:0.6,
+      max_tokens:300,
+      messages:[
+        {role:'system',content:'You are Nova, a voice assistant on the user\'s phone. Your replies are spoken aloud, so answer in one to three short sentences of plain text. No markdown, no lists, no emojis. If you do not know something current (news, live scores, weather), say so briefly and suggest searching.'},
+        ...history
+      ]
+    };
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify(body)
+    });
+    if(!res.ok){
+      if(res.status===401) throw new Error('Your Groq API key was rejected. Check it in Settings.');
+      if(res.status===404||res.status===400){ model=''; store.set('nova_model',''); history.pop(); throw new Error('Groq model problem. I reset it, so ask again.'); }
+      throw new Error('Groq error '+res.status+'.');
+    }
+    const data=await res.json();
+    const out=(data.choices&&data.choices[0]&&data.choices[0].message.content||'').trim()||'I did not get an answer. Try again.';
+    history.push({role:'assistant',content:out});
+    return out;
+  }
+
+  async function handle(text){
+    if(!text) return;
+    add('me',text);
+    const l=await local(text);
+    if(l){ reply(l); return; }
+    setState('thinking');
+    try{ reply(await ask(text)); }
+    catch(e){
+      setState('idle');
+      reply(e.message && e.message.indexOf('Groq')>=0 || e.message.indexOf('key')>=0 ? e.message : 'I could not reach the internet. Check your connection and try again.');
+    }
+  }
+
+  /* ---------- Wiring ---------- */
+  orb.addEventListener('click',()=>{
+    if(NATIVE){ if(speaking){ synth.cancel(); return; } nativeListen(); return; }
+    if(speaking){ synth.cancel(); return; }
+    if(recActive){ stopRec(); setState('idle'); return; }
+    tapMode=true; awaiting=false; stopRec(); startRec();
+  });
+  function sendTyped(){
+    const v=$('txt').value.trim(); if(!v) return;
+    $('txt').value=''; handle(v);
+  }
+  document.querySelectorAll('#chips button').forEach(b=>b.addEventListener('click',()=>{
+    const t=$('txt'); t.value=b.getAttribute('data-t'); t.focus();
+  }));
+  $('send').addEventListener('click',sendTyped);
+  $('txt').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); sendTyped(); } });
+  $('gear').addEventListener('click',()=>$('panel').classList.toggle('open'));
+  $('save').addEventListener('click',()=>{
+    apiKey=$('key').value.trim(); store.set('nova_key',apiKey);
+    model=''; store.set('nova_model','');
+    wakeWord=($('wakeword').value.trim().toLowerCase()||'nova'); store.set('nova_wakeword',wakeWord);
+    wakeOn=$('wake').checked; store.set('nova_wake',wakeOn?'1':'0');
+    $('panel').classList.remove('open');
+    stopRec(); tapMode=false;
+    if(wakeOn){ sys('Hands-free on. Say "'+wakeWord+'" followed by your request.'); startRec(); }
+    else setState('idle');
+  });
+
+  if(NATIVE){ const wr=$('wake').closest('.row'); if(wr) wr.style.display='none'; }
+  if(!SR && !NATIVE) sys('Voice input needs Chrome. You can still type requests.');
+  else if(!NATIVE && !window.isSecureContext) sys('Voice needs a secure page. Open this from localhost or an https link.');
+})();
+</script>
+</body>
+</html>

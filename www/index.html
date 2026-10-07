@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090907" id="themeMeta">
+<title>Nova</title>
+<style>
+  :root{
+    --bg:#090907; --card:#14140f; --card2:#1b1b14; --line:#26261c;
+    --y:#FFE600; --y2:#F2D200; --yl:#FFF27A; --yl2:#FFFBD0; --yd:rgba(115,103,0,.35);
+    --ya:rgba(255,230,0,.14); --yg:rgba(255,230,0,.45); --glow:rgba(170,150,0,.5);
+    --text:#F6F6EE; --mute:#8d8d7c; --ink:#14120a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{
+    color:var(--text);
+    font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:
+      radial-gradient(circle at 100% 0%, var(--glow), transparent 42%),
+      radial-gradient(circle at 0% 100%, var(--glow), transparent 42%),
+      var(--bg);
+  }
+  #bgimg{display:none;position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+  #bgimg::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.58)}
+  button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
+  .i{width:22px;height:22px;display:block}
+  .i.sm{width:18px;height:18px}
+
+  /* ----- views ----- */
+  .view{display:none;position:fixed;inset:0;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .view.active{display:flex}
+
+  /* ----- onboarding ----- */
+  #v-onb{padding-left:26px;padding-right:26px}
+  .skip{align-self:flex-end;color:var(--mute);font-size:14px;padding:16px 4px}
+  .bubbles{position:relative;height:340px;margin-top:6px}
+  .rb{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .rb svg{width:72%;height:72%}
+  .rb.b1{width:170px;height:170px;left:4px;top:10px;background:radial-gradient(circle at 30% 25%,#6b6b60,#1a1a14);--rb:#e6e6dc;--eye:var(--y)}
+  .rb.b2{width:112px;height:112px;right:2px;top:120px;background:radial-gradient(circle at 30% 25%,#7a5a1a,#1c1407);--rb:#f3e3c2;--eye:#ff9a1f}
+  .rb.b3{width:124px;height:124px;left:38px;top:196px;background:radial-gradient(circle at 30% 25%,#1d5f86,#07151f);--rb:#d7ecf7;--eye:#35d0ff}
+  #onbT{color:var(--y);font-size:34px;line-height:1.12;font-weight:800;margin-top:6px}
+  #onbP{color:var(--mute);font-size:15px;line-height:1.5;margin-top:12px;max-width:300px}
+  .onbfoot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding:20px 0 26px}
+  .dots{display:flex;gap:7px;align-items:center}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#3a3a2c}
+  .dots i.on{width:26px;border-radius:6px;background:var(--y)}
+  .round{width:58px;height:58px;border-radius:50%;background:var(--y);color:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px var(--ya)}
+
+  /* ----- home ----- */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 6px}
+  .who{display:flex;align-items:center;gap:11px}
+  .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--y),var(--y2));color:var(--ink);display:flex;align-items:center;justify-content:center}
+  .who small{display:block;color:var(--mute);font-size:12px}
+  .who b{font-size:16px}
+  .pill{width:42px;height:42px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--y)}
+  #v-home .scroll{flex:1;overflow-y:auto;padding:6px 20px 110px}
+  h2.hello{color:var(--y);font-size:27px;line-height:1.18;font-weight:800;margin:12px 0 18px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .cards.second{margin-top:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:5px;min-height:112px}
+  .card.tall{grid-row:span 2;min-height:236px}
+  .ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;margin-bottom:6px}
+  .ico .i{width:18px;height:18px}
+  .c0{background:#7c4dff}.c1{background:#e83e8c}.c2{background:#1fa3e8}.c3{background:#e8861f}
+  .card b{font-size:15px}
+  .card small{color:var(--mute);font-size:12px;line-height:1.4}
+  .ask{margin-top:auto;background:var(--y);color:var(--ink);font-weight:800;border-radius:999px;padding:11px;text-align:center;font-size:14px}
+  .sect{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+  .sect b{font-size:16px}
+  .sect button{color:var(--y);font-size:13px}
+  .chips{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600}
+  .chip .i{width:16px;height:16px}
+  .chip.hot{background:var(--y);color:var(--ink);border-color:var(--y)}
+  #hist{display:flex;flex-direction:column;gap:10px}
+  .hitem{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 12px;text-align:left;width:100%}
+  .hico{flex:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .hico .i{width:18px;height:18px}
+  .htxt{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hitem .i{color:var(--mute)}
+  .hint{color:var(--mute);font-size:13px;padding:6px 2px}
+
+  #nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));display:none;align-items:center;gap:6px;background:rgba(28,28,20,.92);border:1px solid var(--line);border-radius:999px;padding:7px 10px;backdrop-filter:blur(10px);z-index:5}
+  #nav button{width:50px;height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:var(--mute)}
+  #nav button.on{color:var(--y)}
+  #nav button.mid{width:56px;height:56px;background:var(--y);color:var(--ink);box-shadow:0 0 22px var(--yg)}
+
+  /* ----- chat + notes ----- */
+  .bar{display:flex;align-items:center;gap:12px;padding:14px 16px 8px}
+  .bar .ttl{flex:1}
+  .bar .ttl b{display:block;font-size:17px}
+  .bar .ttl small{color:var(--y);font-size:12px}
+  .back{width:42px;height:42px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+  #log{flex:1;overflow-y:auto;padding:12px 18px 8px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:86%;padding:11px 15px;border-radius:18px;line-height:1.45;font-size:16px;white-space:pre-wrap;word-wrap:break-word}
+  .me{align-self:flex-end;background:var(--y);color:var(--ink);font-weight:600;border-bottom-right-radius:5px}
+  .nova{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:5px}
+  .sys{align-self:center;color:var(--mute);font-size:14px;text-align:center}
+  .empty{margin:auto;text-align:center;color:var(--mute);line-height:1.65;padding:0 18px}
+  .empty h3{font-size:24px;color:var(--text);margin-bottom:6px}
+  .empty h3 em{font-style:normal;color:var(--y)}
+  .empty b{color:var(--y);font-weight:600}
+  .inbar{display:flex;gap:8px;padding:6px 14px 12px;align-items:center}
+  .inbar input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:13px 16px;font-size:16px;outline:none;min-height:48px}
+  .inbar input:focus{border-color:var(--y2)}
+  .inbar .sm{width:48px;height:48px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--y);flex:none}
+  .inbar .go{width:48px;height:48px;border-radius:50%;background:var(--y);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+  #nlist{flex:1;overflow-y:auto;padding:10px 18px;display:flex;flex-direction:column;gap:10px}
+  .note{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+  .note .nt{flex:1;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+  .note small{display:block;color:var(--mute);font-size:12px;margin-top:4px}
+  .note button{color:var(--mute);width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:none}
+
+  /* ----- voice ----- */
+  .vstage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+  .blob{position:relative;width:250px;height:250px;transition:transform .4s}
+  .blob i{position:absolute;inset:0;border-radius:42% 58% 63% 37%/45% 41% 59% 55%;
+    background:radial-gradient(circle at 38% 32%,var(--yl2) 0,var(--yl) 28%,var(--y) 52%,var(--yd) 100%);
+    box-shadow:0 0 70px var(--yg);
+    animation:morph 7s ease-in-out infinite,spin 20s linear infinite;opacity:.85}
+  .blob i:nth-child(2){inset:16px;opacity:.7;animation-duration:9s,26s;animation-direction:normal,reverse;background:radial-gradient(circle at 60% 40%,var(--yl2),var(--y2) 55%,var(--yd))}
+  .blob i:nth-child(3){inset:46px;opacity:.95;animation-duration:5s,14s;background:radial-gradient(circle at 50% 50%,#ffffff,var(--yl) 45%,var(--ya))}
+  .blob.listening{transform:scale(1.1)}
+  .blob.listening i{animation-duration:3.2s,9s}
+  .blob.thinking{animation:pulse 1s ease-in-out infinite}
+  .blob.speaking{animation:pulse 1.7s ease-in-out infinite}
+  @keyframes morph{0%,100%{border-radius:42% 58% 63% 37%/45% 41% 59% 55%}33%{border-radius:58% 42% 38% 62%/55% 58% 42% 45%}66%{border-radius:40% 60% 55% 45%/60% 40% 60% 40%}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @media (prefers-reduced-motion:reduce){.blob,.blob i,.mic{animation:none!important}}
+  #vtext{padding:0 26px 8px;text-align:center;min-height:150px;max-height:34vh;overflow-y:auto}
+  #status{color:var(--y);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  #you{color:var(--mute);font-size:14px;margin-bottom:6px;min-height:18px}
+  #caption{font-size:19px;line-height:1.45;font-weight:600}
+  #heard{color:var(--y2);font-size:15px;min-height:20px;margin-top:6px}
+  .vctl{display:flex;align-items:center;justify-content:space-between;padding:10px 34px 26px}
+  .vctl .side{width:48px;height:48px;border-radius:50%;background:#2a2a1e;display:flex;align-items:center;justify-content:center;color:var(--mute)}
+  .mic{width:78px;height:78px;border-radius:50%;background:var(--y);color:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px var(--ya),0 0 30px var(--yg)}
+  .mic .i{width:30px;height:30px}
+  .mic.listening{animation:ring 1.3s infinite}
+  .mic.thinking,.mic.speaking{animation:ring 1.8s infinite}
+  @keyframes ring{0%{box-shadow:0 0 0 0 var(--yg),0 0 30px var(--yg)}100%{box-shadow:0 0 0 30px transparent,0 0 30px var(--yg)}}
+
+  /* ----- settings sheet ----- */
+  #sheet{display:none;position:fixed;inset:0;z-index:20;align-items:flex-end}
+  #sheet.open{display:flex}
+  #sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  #panel{position:relative;width:100%;background:#13130d;border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:13px;max-height:90vh;overflow-y:auto}
+  #panel h3{font-size:18px;color:var(--y)}
+  #panel .sec{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--y);margin-top:6px;border-top:1px solid var(--line);padding-top:14px}
+  #panel .lbl{font-size:14px;color:var(--mute)}
+  #panel label{font-size:14px;color:var(--mute);display:flex;flex-direction:column;gap:6px}
+  #panel label.inline{flex-direction:row;align-items:center;justify-content:space-between}
+  #panel input[type=password],#panel input[type=text],#panel select{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px;font-size:16px}
+  #panel input[type=color]{width:46px;height:34px;border:none;background:none;padding:0}
+  .sw{display:flex;flex-wrap:wrap;gap:10px}
+  .sw button{width:36px;height:36px;border-radius:50%;border:2px solid var(--line)}
+  .sw button.on{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+  .two{display:flex;gap:10px}
+  .ghost{flex:1;border:1px solid var(--line);border-radius:12px;padding:11px;font-size:14px;color:var(--text);background:var(--card)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:16px}
+  .row small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
+  #panel .save{background:var(--y);color:var(--ink);border-radius:999px;padding:14px;font-weight:800;font-size:15px}
+  input[type=checkbox]{width:22px;height:22px;accent-color:var(--y)}
+
+  /* ----- accounts, profile, admin ----- */
+  .authwrap{flex:1;overflow-y:auto;padding:30px 26px 26px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+  .authwrap h2{font-size:28px;color:var(--y);text-align:center}
+  .authwrap .avatar{margin:0 auto}
+  .muted{color:var(--mute);font-size:14px;text-align:center}
+  .authwrap input[type=text],.authwrap input[type=email],.authwrap input[type=password]{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:14px;font-size:16px;outline:none;width:100%}
+  .authwrap input:focus{border-color:var(--y2)}
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mute);line-height:1.4}
+  .consent a{color:var(--y)}
+  .amsg{min-height:20px;color:#ff9a9a;font-size:14px;text-align:center}
+  .authwrap .save,.mpanel .save{background:var(--y);color:var(--ink);border-radius:999px;padding:14px;font-weight:800;font-size:15px}
+  .linkbtn{color:var(--y);font-size:14px;padding:8px}
+  .avatar.big{width:76px;height:76px;font-size:30px;font-weight:800}
+  .profwrap{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .profwrap h2{font-size:22px}
+  .badge{background:var(--y);color:var(--ink);font-weight:800;font-size:12px;padding:3px 10px;border-radius:999px}
+  .menu{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .mrow{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;text-align:left;font-size:15px;width:100%}
+  .modal{display:none;position:fixed;inset:0;z-index:40;align-items:flex-end}
+  .modal.open{display:flex}
+  .mbg{position:absolute;inset:0;background:rgba(0,0,0,.65)}
+  .mpanel{position:relative;width:100%;background:#13130d;border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:86vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+  .mpanel h3{color:var(--y);font-size:18px}
+  .ptxt{font-size:14px;line-height:1.55}
+  .ptxt p{margin-bottom:9px}
+  .evbox{display:flex;flex-direction:column;gap:13px}
+  #adList{flex:1;overflow-y:auto;padding:6px 18px 14px;display:flex;flex-direction:column;gap:10px}
+  button:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="bgimg"></div>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2l2.4 7.1L22 12l-7.6 2.9L12 22l-2.4-7.1L2 12l7.6-2.9z" fill="currentColor"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-5 4v-4H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V6l11-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2M9 2h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 11h6M9 15h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="robot" viewBox="0 0 100 100">
+      <line x1="50" y1="9" x2="50" y2="22" stroke="var(--rb)" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="50" cy="8" r="4.5" fill="var(--eye)"/>
+      <rect x="14" y="40" width="8" height="16" rx="4" fill="var(--rb)" opacity=".8"/>
+      <rect x="78" y="40" width="8" height="16" rx="4" fill="var(--rb)" opacity=".8"/>
+      <rect x="22" y="22" width="56" height="48" rx="16" fill="var(--rb)"/>
+      <rect x="29" y="31" width="42" height="26" rx="10" fill="#0d0d0a"/>
+      <circle cx="41" cy="44" r="6" fill="var(--eye)"/>
+      <circle cx="59" cy="44" r="6" fill="var(--eye)"/>
+      <rect x="43" y="61" width="14" height="3.5" rx="1.8" fill="#0d0d0a" opacity=".6"/>
+      <rect x="32" y="72" width="36" height="20" rx="9" fill="var(--rb)" opacity=".85"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ===== Onboarding ===== -->
+<section class="view" id="v-onb">
+  <button class="skip" id="onbSkip">Skip</button>
+  <div class="bubbles">
+    <div class="rb b1"><svg><use href="#robot"/></svg></div>
+    <div class="rb b2"><svg><use href="#robot"/></svg></div>
+    <div class="rb b3"><svg><use href="#robot"/></svg></div>
+  </div>
+  <h1 id="onbT">You Talk.<br>Nova Does.</h1>
+  <p id="onbP">Smart. Fast. Personal. Nova helps you call, chat, search and control your phone.</p>
+  <div class="onbfoot">
+    <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
+    <button class="round" id="onbNext" aria-label="Next"><svg class="i"><use href="#i-next"/></svg></button>
+  </div>
+</section>
+
+<!-- ===== Home ===== -->
+<section class="view" id="v-home">
+  <div class="top">
+    <div class="who">
+      <div class="avatar"><svg class="i"><use href="#i-spark"/></svg></div>
+      <div><small>Hi there</small><b id="hiName">Nova</b></div>
+    </div>
+    <button class="pill" id="gear" aria-label="Settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+  </div>
+  <div class="scroll">
+    <h2 class="hello">Hello, Ask Me<br>Anything, Anytime</h2>
+    <div class="cards">
+      <button class="card tall" data-go="chat" data-t="">
+        <div class="ico c0"><svg class="i"><use href="#i-chat"/></svg></div>
+        <b>Chat with Nova</b>
+        <small>Type a request, call, text, play music or ask anything.</small>
+        <div class="ask">Ask now</div>
+      </button>
+      <button class="card" data-go="voice">
+        <div class="ico c1"><svg class="i"><use href="#i-mic"/></svg></div>
+        <b>Talk with Nova</b>
+        <small>Speak and Nova does it.</small>
+      </button>
+      <button class="card" data-go="chat" data-t="full phone info">
+        <div class="ico c2"><svg class="i"><use href="#i-bolt"/></svg></div>
+        <b>Phone control</b>
+        <small>Info, battery, torch, volume.</small>
+      </button>
+    </div>
+    <div class="cards second">
+      <button class="card" data-go="notes">
+        <div class="ico c3"><svg class="i"><use href="#i-note"/></svg></div>
+        <b>Notes</b>
+        <small>Say "write a note ..."</small>
+      </button>
+      <button class="card" data-go="chat" data-t="nearest hospital">
+        <div class="ico c0"><svg class="i"><use href="#i-pin"/></svg></div>
+        <b>Nearby</b>
+        <small>Closest hospital, ATM, fuel.</small>
+      </button>
+    </div>
+
+    <div class="sect"><b>Quick topics</b></div>
+    <div class="chips">
+      <button class="chip hot" data-go="chat" data-t="call "><svg class="i"><use href="#i-phone"/></svg>Call</button>
+      <button class="chip" data-go="chat" data-t="whatsapp "><svg class="i"><use href="#i-chat"/></svg>WhatsApp</button>
+      <button class="chip" data-go="chat" data-t="what's on my screen"><svg class="i"><use href="#i-eye"/></svg>Read screen</button>
+      <button class="chip" data-go="chat" data-t="set an alarm for "><svg class="i"><use href="#i-clock"/></svg>Alarm</button>
+      <button class="chip" data-go="chat" data-t="what's on my calendar today"><svg class="i"><use href="#i-cal"/></svg>Calendar</button>
+      <button class="chip" data-go="chat" data-t="where am i"><svg class="i"><use href="#i-pin"/></svg>Where am I</button>
+      <button class="chip" data-go="chat" data-t="play "><svg class="i"><use href="#i-music"/></svg>Music</button>
+      <button class="chip" data-go="chat" data-t="navigate to "><svg class="i"><use href="#i-pin"/></svg>Navigate</button>
+      <button class="chip" data-go="chat" data-t="set a timer for "><svg class="i"><use href="#i-clock"/></svg>Timer</button>
+      <button class="chip" data-go="chat" data-t="what's my battery"><svg class="i"><use href="#i-bolt"/></svg>Battery</button>
+      <button class="chip" data-go="chat" data-t="flashlight on"><svg class="i"><use href="#i-sun"/></svg>Torch</button>
+    </div>
+
+    <div class="sect"><b>Recent requests</b><button data-go="chat">See all</button></div>
+    <div id="hist"></div>
+  </div>
+</section>
+
+<!-- ===== Chat ===== -->
+<section class="view" id="v-chat">
+  <div class="bar">
+    <button class="back" data-go="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="ttl"><b>Nova</b><small id="status2">Online</small></div>
+    <button class="back" id="gear2" aria-label="Settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+  </div>
+  <main id="log">
+    <div class="empty" id="empty">
+      <h3>I dey <em>listen</em></h3>
+      Type below or tap the mic.<br><br>
+      Try: <b>"call Chidi"</b>, <b>"nearest hospital"</b>, <b>"set an alarm for 6:30 am"</b>, <b>"write a note buy bread"</b>, <b>"what's on my screen"</b>, <b>"full phone info"</b>, <b>"play Burna Boy"</b>, or ask anything.
+    </div>
+  </main>
+  <div class="inbar">
+    <input id="txt" type="text" placeholder="Type a request" autocomplete="off" enterkeyhint="send">
+    <button class="sm" id="cmic" aria-label="Speak"><svg class="i"><use href="#i-mic"/></svg></button>
+    <button class="go" id="send" aria-label="Send"><svg class="i"><use href="#i-send"/></svg></button>
+  </div>
+</section>
+
+<!-- ===== Notes ===== -->
+<section class="view" id="v-notes">
+  <div class="bar">
+    <button class="back" data-go="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="ttl"><b>Notes</b><small id="ncount">0 notes</small></div>
+  </div>
+  <div id="nlist"></div>
+  <div class="inbar">
+    <input id="ntxt" type="text" placeholder="Write a note" autocomplete="off" enterkeyhint="done">
+    <button class="go" id="nadd" aria-label="Add note"><svg class="i"><use href="#i-send"/></svg></button>
+  </div>
+</section>
+
+<!-- ===== Voice ===== -->
+<section class="view" id="v-voice">
+  <div class="bar">
+    <button class="back" data-go="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="ttl" style="text-align:center"><b>Speak to Nova</b></div>
+    <button class="back" id="gear3" aria-label="Settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+  </div>
+  <div class="vstage">
+    <div class="blob idle" id="blob"><i></i><i></i><i></i></div>
+  </div>
+  <div id="vtext">
+    <div id="status">Tap the mic and speak</div>
+    <div id="you"></div>
+    <div id="caption"></div>
+    <div id="heard"></div>
+  </div>
+  <div class="vctl">
+    <button class="side" data-go="chat" aria-label="Open chat"><svg class="i"><use href="#i-chat"/></svg></button>
+    <button class="mic" id="mic" aria-label="Talk to Nova"><svg class="i"><use href="#i-mic"/></svg></button>
+    <button class="side" id="vstop" aria-label="Stop"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+</section>
+
+<!-- ===== Login / sign up ===== -->
+<section class="view" id="v-auth">
+  <div class="authwrap">
+    <div class="avatar big"><svg class="i"><use href="#i-spark"/></svg></div>
+    <h2 id="auTitle">Welcome back</h2>
+    <p class="muted" id="auSub">Log in to use Nova.</p>
+    <input id="auName" type="text" placeholder="Your name" autocomplete="name" style="display:none">
+    <input id="auEmail" type="email" placeholder="Email" autocomplete="email" inputmode="email">
+    <input id="auPass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password">
+    <label class="consent" id="auConsentRow" style="display:none"><input type="checkbox" id="auConsent"><span>I agree to the <a href="#" id="auPrivLink">Privacy Policy</a> and that Nova stores my name and email.</span></label>
+    <div id="auMsg" class="amsg"></div>
+    <button class="save" id="auGo">Log in</button>
+    <button class="linkbtn" id="auToggle">New here? Create an account</button>
+  </div>
+</section>
+
+<!-- ===== Profile ===== -->
+<section class="view" id="v-profile">
+  <div class="bar">
+    <button class="back" data-go="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="ttl"><b>Profile</b></div>
+    <button class="back" id="gear4" aria-label="Settings"><svg class="i"><use href="#i-sliders"/></svg></button>
+  </div>
+  <div class="profwrap">
+    <div class="avatar big" id="prAvatar">N</div>
+    <h2 id="prName">Nova user</h2>
+    <p class="muted" id="prEmail"></p>
+    <span class="badge" id="prAdmin" style="display:none">Admin</span>
+    <div class="menu">
+      <button class="mrow" id="prSettings">Settings and Nova everywhere</button>
+      <button class="mrow" id="prUsers" style="display:none">All users (admin)</button>
+      <button class="mrow" id="prPrivacy">Privacy policy</button>
+      <button class="mrow" id="prLogout">Log out</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Admin: all users ===== -->
+<section class="view" id="v-admin">
+  <div class="bar">
+    <button class="back" data-go="profile" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="ttl"><b>Users</b><small id="adCount">0 users</small></div>
+    <button class="back" id="adCopy" aria-label="Copy all emails"><svg class="i"><use href="#i-copy"/></svg></button>
+  </div>
+  <div class="inbar"><input id="adSearch" type="text" placeholder="Search email or name" autocomplete="off"></div>
+  <div id="adList"></div>
+</section>
+
+<!-- ===== Privacy policy ===== -->
+<div id="privSheet" class="modal">
+  <div class="mbg" id="privBg"></div>
+  <section class="mpanel">
+    <h3>Privacy Policy</h3>
+    <div class="ptxt">
+      <p><b>What Nova stores.</b> When you sign up we store your name, your email and the last time you used Nova.</p>
+      <p><b>Why.</b> To create your account and let you log in. We do not sell your data.</p>
+      <p><b>Who can see it.</b> You can see your own details. Only the Nova owner (the admin) can see the list of users.</p>
+      <p><b>On your phone.</b> Notes, settings and your AI keys stay on your device. If you turn on screen reading, the text on your screen is sent to the AI provider you chose so it can explain it. Nova does not keep it.</p>
+      <p><b>Your choices.</b> You can turn off screen reading, message reading, the floating button and the wake word in Settings at any time. To delete your account and data, contact the Nova owner.</p>
+      <p>By creating an account you agree to this policy.</p>
+    </div>
+    <button class="save" id="privClose">Close</button>
+  </section>
+</div>
+
+<!-- ===== Bottom nav (home only) ===== -->
+<nav id="nav">
+  <button class="on" data-go="home" aria-label="Home"><svg class="i"><use href="#i-home"/></svg></button>
+  <button data-go="chat" aria-label="Chat"><svg class="i"><use href="#i-chat"/></svg></button>
+  <button class="mid" data-go="voice" aria-label="Voice"><svg class="i"><use href="#i-spark"/></svg></button>
+  <button data-go="notes" aria-label="Notes"><svg class="i"><use href="#i-note"/></svg></button>
+  <button data-go="profile" aria-label="Profile"><svg class="i"><use href="#i-user"/></svg></button>
+</nav>
+
+<!-- ===== Settings sheet ===== -->
+<div id="sheet">
+  <div id="sheetbg"></div>
+  <section id="panel">
+    <h3>Settings</h3>
+
+    <div class="sec">Appearance</div>
+    <div class="lbl">Accent colour</div>
+    <div class="sw" id="accSw"></div>
+    <label class="inline">Custom colour <input type="color" id="accCustom" value="#ffe600"></label>
+    <div class="lbl">Background</div>
+    <div class="sw" id="bgSw"></div>
+    <div class="two">
+      <button class="ghost" id="bgPick">Use my photo</button>
+      <button class="ghost" id="bgClear">Remove photo</button>
+    </div>
+    <input type="file" id="bgFile" accept="image/*" hidden>
+
+    <div class="sec">AI provider</div>
+    <label>Provider
+      <select id="prov"></select>
+    </label>
+    <label>API key
+      <input type="password" id="key" placeholder="Paste your key" autocomplete="off">
+    </label>
+    <label>Model (leave empty to use the default)
+      <input type="text" id="mdl" placeholder="e.g. gpt-4o-mini" autocomplete="off">
+    </label>
+    <label id="baseRow">Base URL (custom provider)
+      <input type="text" id="base" placeholder="https://your-provider.com/v1" autocomplete="off">
+    </label>
+
+    <div id="evSec" class="evbox" style="display:none">
+      <div class="sec">Nova everywhere</div>
+      <div class="row"><div>Floating Nova button<small>Tap it over any app, then ask. Needs Screen control.</small></div><input type="checkbox" id="optBubble"></div>
+      <div class="row"><div>Hold Volume Up to talk<small>A short press still turns the volume up.</small></div><input type="checkbox" id="optVol"></div>
+      <div class="row"><div>"Hey Nova" wake word<small>Shows a permanent notification and uses more battery.</small></div><input type="checkbox" id="optWake"></div>
+      <div class="row"><div>Read new messages aloud<small>WhatsApp, SMS and Telegram. Needs Message access.</small></div><input type="checkbox" id="optAnnounce"></div>
+      <div class="row"><div>Let Nova send screen text to my AI<small>Needed for "explain my screen". The text goes to the provider you picked.</small></div><input type="checkbox" id="optScreenAI"></div>
+      <div class="lbl" id="evStatus"></div>
+      <div class="two">
+        <button class="ghost" id="evA11y">Screen control</button>
+        <button class="ghost" id="evNotif">Message access</button>
+      </div>
+      <div class="two">
+        <button class="ghost" id="evAssist">Default assistant</button>
+        <button class="ghost" id="evOverlay">Show over apps</button>
+      </div>
+    </div>
+
+    <div class="sec">Calling and voice</div>
+    <label>Calling SIM
+      <select id="sim">
+        <option value="0">Phone default</option>
+        <option value="1">SIM 1</option>
+        <option value="2">SIM 2</option>
+      </select>
+    </label>
+    <label>Wake word
+      <input type="text" id="wakeword" value="nova" autocomplete="off">
+    </label>
+    <div class="row">
+      <div>Hands-free mode<small>Say the wake word, then your request. Page must stay open.</small></div>
+      <input type="checkbox" id="wake">
+    </div>
+    <button class="save" id="save">Save</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const log=$('log'), mic=$('mic'), statusEl=$('status'), status2=$('status2'), heardEl=$('heard');
+  const blob=$('blob'), cap=$('caption'), you=$('you');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+
+  const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const P = name => (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+
+  const store = {
+    get(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:v }catch(e){ return d } },
+    set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+  };
+
+  /* ---------- Accounts (Supabase) ---------- */
+  const SB_URL='https://aajsfnvipjbgmfphymiu.supabase.co';
+  const SB_KEY='sb_publishable_dBXBnC6olMOYtUI5BGaqfg_TSyYwupJ';
+  let session=null; try{ session=JSON.parse(store.get('nova_session','null')); }catch(e){ session=null; }
+  let isAdmin=false;
+  function saveSession(v){ session=v; store.set('nova_session', v?JSON.stringify(v):'null'); }
+
+  /* ---------- AI providers ---------- */
+  const PROVIDERS={
+    groq:{name:'Groq',base:'https://api.groq.com/openai/v1',model:''},
+    openai:{name:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+    gemini:{name:'Google Gemini',base:'https://generativelanguage.googleapis.com/v1beta/openai',model:'gemini-2.0-flash'},
+    anthropic:{name:'Anthropic Claude',kind:'anthropic',model:'claude-haiku-4-5-20251001'},
+    openrouter:{name:'OpenRouter',base:'https://openrouter.ai/api/v1',model:'openai/gpt-4o-mini'},
+    deepseek:{name:'DeepSeek',base:'https://api.deepseek.com/v1',model:'deepseek-chat'},
+    mistral:{name:'Mistral',base:'https://api.mistral.ai/v1',model:'mistral-small-latest'},
+    together:{name:'Together AI',base:'https://api.together.xyz/v1',model:'meta-llama/Llama-3.3-70B-Instruct-Turbo'},
+    xai:{name:'xAI Grok',base:'https://api.x.ai/v1',model:'grok-3-mini'},
+    custom:{name:'Custom (OpenAI-compatible)',base:'',model:''}
+  };
+  let provider=store.get('nova_provider','groq'); if(!PROVIDERS[provider]) provider='groq';
+  function keyFor(p){
+    let k=store.get('nova_key_'+p,'');
+    if(!k && p==='groq') k=store.get('nova_key','');
+    return k;
+  }
+  let apiKey=keyFor(provider);
+  let manualModel=store.get('nova_mdl_'+provider,'');
+  let customBase=store.get('nova_base','');
+  let autoModel=store.get('nova_model','');
+  let wakeWord = (store.get('nova_wakeword','nova')||'nova').toLowerCase();
+  let wakeOn = store.get('nova_wake','0')==='1';
+  let history = [];
+  let speaking=false, awaiting=false, recActive=false, tapMode=false, rec=null;
+  let timers = [];
+  let cur='home';
+  let recent=[]; try{ recent=JSON.parse(store.get('nova_hist','[]'))||[]; }catch(e){ recent=[]; }
+  let notes=[]; try{ notes=JSON.parse(store.get('nova_notes','[]'))||[]; }catch(e){ notes=[]; }
+
+  /* ---------- Theme ---------- */
+  const ACCENTS=[['Yellow','#FFE600'],['Green','#19F58B'],['Blue','#3DA9FF'],['Pink','#FF4D9D'],['Orange','#FF8A1F'],['Purple','#A66BFF'],['Red','#FF4D4D'],['White','#F2F2F2']];
+  const BGS=[['Black','#090907'],['Pure black','#000000'],['Midnight','#070B18'],['Forest','#06100B'],['Plum','#12091A'],['Slate','#0E1116'],['Wine','#18080C']];
+  let theme={accent:'#FFE600',bg:'#090907',img:''};
+  try{ const t=JSON.parse(store.get('nova_theme','{}')); if(t&&t.accent) theme.accent=t.accent; if(t&&t.bg) theme.bg=t.bg; }catch(e){}
+  theme.img=store.get('nova_bgimg','');
+
+  function hex2rgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  function rgb2hex(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+  function mix(a,b,t){ const x=hex2rgb(a), y=hex2rgb(b); return rgb2hex(x[0]+(y[0]-x[0])*t, x[1]+(y[1]-x[1])*t, x[2]+(y[2]-x[2])*t); }
+  function lum(h){ const c=hex2rgb(h); return (0.299*c[0]+0.587*c[1]+0.114*c[2])/255; }
+  function applyTheme(){
+    const s=document.documentElement.style, y=theme.accent, bg=theme.bg, c=hex2rgb(y);
+    s.setProperty('--y',y); s.setProperty('--y2',mix(y,'#000000',.12));
+    s.setProperty('--yl',mix(y,'#ffffff',.55)); s.setProperty('--yl2',mix(y,'#ffffff',.85));
+    s.setProperty('--yd','rgba('+Math.round(c[0]*.45)+','+Math.round(c[1]*.45)+','+Math.round(c[2]*.45)+',.35)');
+    s.setProperty('--ya','rgba('+c[0]+','+c[1]+','+c[2]+',.14)');
+    s.setProperty('--yg','rgba('+c[0]+','+c[1]+','+c[2]+',.45)');
+    s.setProperty('--glow','rgba('+Math.round(c[0]*.7)+','+Math.round(c[1]*.7)+','+Math.round(c[2]*.7)+',.5)');
+    s.setProperty('--ink', lum(y)>.55 ? '#14120a' : '#ffffff');
+    s.setProperty('--bg',bg); s.setProperty('--card',mix(bg,'#ffffff',.06)); s.setProperty('--card2',mix(bg,'#ffffff',.10)); s.setProperty('--line',mix(bg,'#ffffff',.16));
+    const meta=$('themeMeta'); if(meta) meta.setAttribute('content',bg);
+    const el=$('bgimg');
+    if(theme.img){ el.style.backgroundImage='url("'+theme.img+'")'; el.style.display='block'; }
+    else { el.style.backgroundImage='none'; el.style.display='none'; }
+    drawSwatches();
+  }
+  function saveTheme(){ store.set('nova_theme',JSON.stringify({accent:theme.accent,bg:theme.bg})); }
+  function drawSwatches(){
+    const a=$('accSw'), b=$('bgSw'); a.innerHTML=''; b.innerHTML='';
+    ACCENTS.forEach(x=>{
+      const btn=document.createElement('button'); btn.style.background=x[1]; btn.setAttribute('aria-label',x[0]);
+      if(x[1].toLowerCase()===theme.accent.toLowerCase()) btn.className='on';
+      btn.addEventListener('click',()=>{ theme.accent=x[1]; $('accCustom').value=x[1]; saveTheme(); applyTheme(); });
+      a.appendChild(btn);
+    });
+    BGS.forEach(x=>{
+      const btn=document.createElement('button'); btn.style.background=x[1]; btn.setAttribute('aria-label',x[0]);
+      if(x[1].toLowerCase()===theme.bg.toLowerCase() && !theme.img) btn.className='on';
+      btn.addEventListener('click',()=>{ theme.bg=x[1]; theme.img=''; store.set('nova_bgimg',''); saveTheme(); applyTheme(); });
+      b.appendChild(btn);
+    });
+  }
+  function pickPhoto(file){
+    if(!file) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=900, sc=Math.min(1,max/Math.max(img.width,img.height));
+        const cv=document.createElement('canvas'); cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        theme.img=cv.toDataURL('image/jpeg',0.8);
+        store.set('nova_bgimg',theme.img);
+        if(store.get('nova_bgimg','')!==theme.img){ theme.img=''; sys('That photo is too big to save. Try a smaller one.'); }
+        applyTheme();
+      };
+      img.onerror=()=>sys('I could not read that photo.');
+      img.src=rd.result;
+    };
+    rd.readAsDataURL(file);
+  }
+
+  /* ---------- Settings fields ---------- */
+  Object.keys(PROVIDERS).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=PROVIDERS[k].name; $('prov').appendChild(o); });
+  function loadProviderFields(p){
+    $('key').value=keyFor(p); $('mdl').value=store.get('nova_mdl_'+p,''); $('base').value=customBase;
+    $('mdl').placeholder = PROVIDERS[p].model ? 'Default: '+PROVIDERS[p].model : (p==='groq' ? 'Default: picked automatically' : 'Type the model name');
+    $('baseRow').style.display = p==='custom' ? 'flex' : 'none';
+  }
+  $('prov').value=provider; loadProviderFields(provider);
+  $('prov').addEventListener('change',()=>loadProviderFields($('prov').value));
+  $('wakeword').value = wakeWord; $('wake').checked = wakeOn;
+  $('sim').value = store.get('nova_sim','0');
+
+  /* ---------- Navigation ---------- */
+  function show(v){
+    if(!session && v!=='onb' && v!=='auth') v='auth';
+    cur=v;
+    document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active', e.id==='v-'+v));
+    $('nav').style.display = v==='home' ? 'flex' : 'none';
+    if(v==='chat') setTimeout(()=>{ log.scrollTop=log.scrollHeight; },0);
+    if(v==='notes') renderNotes();
+    if(v==='auth') drawAuth();
+    if(v==='profile') renderProfile();
+    if(v==='admin') loadUsers();
+  }
+  function openSheet(){ $('sheet').classList.add('open'); refreshEverywhere(); }
+  function closeSheet(){ $('sheet').classList.remove('open'); }
+
+  /* ---------- Recent requests (home screen) ---------- */
+  function pushHist(t){
+    if(!t) return;
+    recent=recent.filter(x=>x!==t); recent.unshift(t); recent=recent.slice(0,20);
+    store.set('nova_hist',JSON.stringify(recent));
+    renderHist();
+  }
+  function renderHist(){
+    const box=$('hist'); box.innerHTML='';
+    if(!recent.length){
+      const h=document.createElement('div'); h.className='hint'; h.textContent='Your requests will show here.'; box.appendChild(h); return;
+    }
+    recent.slice(0,4).forEach((t,i)=>{
+      const b=document.createElement('button'); b.className='hitem';
+      const ic=document.createElement('span'); ic.className='hico c'+(i%4);
+      ic.innerHTML='<svg class="i"><use href="#i-chat"/></svg>';
+      const tx=document.createElement('span'); tx.className='htxt'; tx.textContent=t;
+      const ar=document.createElement('span'); ar.innerHTML='<svg class="i sm"><use href="#i-arrow"/></svg>';
+      b.appendChild(ic); b.appendChild(tx); b.appendChild(ar);
+      b.addEventListener('click',()=>{ show('chat'); const inp=$('txt'); inp.value=t; setTimeout(()=>inp.focus(),50); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ---------- Notes ---------- */
+  function saveNotes(){ store.set('nova_notes',JSON.stringify(notes)); }
+  function addNote(t){ notes.unshift({t:t,ts:Date.now()}); notes=notes.slice(0,200); saveNotes(); renderNotes(); }
+  function renderNotes(){
+    $('ncount').textContent=notes.length+(notes.length===1?' note':' notes');
+    const box=$('nlist'); box.innerHTML='';
+    if(!notes.length){ const h=document.createElement('div'); h.className='hint'; h.textContent='No notes yet. Say "write a note buy bread" or type one below.'; box.appendChild(h); return; }
+    notes.forEach((n,i)=>{
+      const d=document.createElement('div'); d.className='note';
+      const w=document.createElement('div'); w.className='nt'; w.textContent=n.t;
+      const s=document.createElement('small'); s.textContent=new Date(n.ts).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      w.appendChild(s);
+      const x=document.createElement('button'); x.setAttribute('aria-label','Delete note'); x.innerHTML='<svg class="i sm"><use href="#i-x"/></svg>';
+      x.addEventListener('click',()=>{ notes.splice(i,1); saveNotes(); renderNotes(); });
+      d.appendChild(w); d.appendChild(x); box.appendChild(d);
+    });
+  }
+
+  /* ---------- UI helpers ---------- */
+  function setState(s,label){
+    const txt = label || ({idle:'Tap the mic and speak',listening:'Listening',thinking:'Thinking',speaking:'Speaking'}[s]);
+    mic.className = 'mic'+(s==='idle'?'':' '+s);
+    blob.className = 'blob '+s;
+    statusEl.textContent = txt;
+    status2.textContent = s==='idle' ? 'Online' : txt;
+  }
+  function add(cls,text){
+    const e=$('empty'); if(e) e.remove();
+    const d=document.createElement('div'); d.className='msg '+cls; d.textContent=text;
+    log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+  }
+  function sys(text){
+    const e=$('empty'); if(e) e.remove();
+    const d=document.createElement('div'); d.className='sys'; d.textContent=text;
+    log.appendChild(d); log.scrollTop=log.scrollHeight;
+    if(cur==='voice') cap.textContent=text;
+  }
+
+  /* ---------- Speech output ---------- */
+  function clean(t){ return t.replace(/[*_`#>]/g,'').replace(/\s+/g,' ').trim(); }
+  function speak(text){
+    if(!synth){ return; }
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(clean(text));
+    u.rate=1.02;
+    u.onstart=()=>{ speaking=true; stopRec(); setState('speaking'); };
+    const done=()=>{ speaking=false; setState('idle'); if(wakeOn || awaiting) startRec(); };
+    u.onend=done; u.onerror=done;
+    synth.speak(u);
+  }
+  function reply(text){ add('nova',text); cap.textContent=text; speak(text); }
+
+  /* ---------- Speech input ---------- */
+  function buildRec(){
+    const r=new SR();
+    r.lang='en-US'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
+    r.onstart=()=>{ recActive=true; setState('listening', wakeOn&&!tapMode ? 'Waiting for "'+wakeWord+'"' : 'Listening'); };
+    r.onresult=e=>{
+      let interim='',fin='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) fin+=t; else interim+=t;
+      }
+      if(interim && (tapMode||awaiting)) heardEl.textContent=interim;
+      if(fin) onHeard(fin.trim());
+    };
+    r.onerror=e=>{
+      if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+        wakeOn=false; $('wake').checked=false; store.set('nova_wake','0');
+        sys('Microphone blocked. Allow mic access for this page in Chrome site settings, or type your request.');
+      }
+    };
+    r.onend=()=>{
+      recActive=false; heardEl.textContent='';
+      if(!speaking && statusEl.textContent!=='Thinking') setState('idle');
+      if(wakeOn && !speaking && !tapMode) setTimeout(startRec,250);
+    };
+    return r;
+  }
+  function startRec(){
+    if(!SR){ sys('Voice input is not supported in this browser. Use Chrome on Android, or type.'); return; }
+    if(recActive || speaking) return;
+    try{ rec=buildRec(); rec.start(); }catch(e){}
+  }
+  function stopRec(){ try{ if(rec) rec.abort(); }catch(e){} recActive=false; }
+
+  function onHeard(text){
+    heardEl.textContent='';
+    if(tapMode){ tapMode=false; handle(text); return; }
+    const low=text.toLowerCase();
+    if(awaiting){ awaiting=false; handle(text); return; }
+    const i=low.indexOf(wakeWord);
+    if(wakeOn && i>=0){
+      const cmd=text.slice(i+wakeWord.length).replace(/^[\s,.!?]+/,'').trim();
+      if(cmd){ handle(cmd); }
+      else { awaiting=true; reply('Yes?'); }
+    }
+  }
+
+  /* ---------- Commands that run on the phone ---------- */
+  function openUrl(url){
+    const AL=P('AppLauncher');
+    if(NATIVE && AL){ AL.openUrl({url:url}).catch(()=>sys('Could not open that app.')); }
+    else { window.location.href=url; }
+  }
+
+  /* Place a real call. Falls back to the dialer if the native call fails. */
+  async function dial(number){
+    const D=P('NovaDevice');
+    if(NATIVE && D){
+      try{
+        await D.placeCall({number:number, sim:parseInt(store.get('nova_sim','0'),10)||0});
+        return true;
+      }catch(e){
+        const s=(e&&e.message)||'';
+        if(/permission/i.test(s)) sys('Phone permission is off for Nova, so I opened the dialer instead.');
+      }
+    }
+    openUrl('tel:'+number);
+    return false;
+  }
+
+  /* ---------- Contacts (native app only) ---------- */
+  let contactCache=null;
+  async function loadContacts(){
+    if(contactCache) return contactCache;
+    const C=P('Contacts');
+    if(!C) throw new Error('Contacts are only available in the Nova app.');
+    const perm=await C.requestPermissions();
+    if(perm && perm.contacts && perm.contacts!=='granted') throw new Error('Contacts permission was denied. Allow it for Nova in Android settings.');
+    const res=await C.getContacts({projection:{name:true,phones:true}});
+    contactCache=(res.contacts||[]).map(c=>({
+      name:(c.name&&(c.name.display||[c.name.given,c.name.family].filter(Boolean).join(' ')))||'',
+      phones:(c.phones||[]).map(p=>p.number).filter(Boolean)
+    })).filter(c=>c.name&&c.phones.length);
+    return contactCache;
+  }
+  function findContact(q){
+    q=q.toLowerCase().trim(); if(!q) return null;
+    let best=null,score=0;
+    for(const c of contactCache){
+      const n=c.name.toLowerCase(); let sc=0;
+      if(n===q) sc=100; else if(n.startsWith(q)) sc=80; else if(n.split(/\s+/).some(w=>w===q)) sc=70; else if(n.includes(q)) sc=50;
+      if(sc>score){score=sc;best=c;}
+    }
+    return best;
+  }
+  function waNum(n){
+    const d=n.replace(/[^\d+]/g,'');
+    if(d.startsWith('+')) return d.slice(1);
+    if(d.startsWith('00')) return d.slice(2);
+    if(d.startsWith('0')) return '234'+d.slice(1);
+    return d;
+  }
+  async function contactAction(kind,name,msg){
+    name=(name||'').replace(/^(my|the)\s+/i,'').trim();
+    try{ await loadContacts(); }catch(e){ return e.message||'I could not read your contacts.'; }
+    const c=findContact(name);
+    if(!c) return 'I could not find '+name+' in your contacts.';
+    const raw=c.phones[0], plain=raw.replace(/[^\d+]/g,'');
+    if(kind==='call'){ setTimeout(()=>dial(plain),700); return 'Calling '+c.name+'.'; }
+    if(kind==='sms'){ setTimeout(()=>openUrl('sms:'+plain+(msg?'?body='+encodeURIComponent(msg):'')),700); return 'Opening a text to '+c.name+'.'; }
+    setTimeout(()=>openUrl('whatsapp://send?phone='+waNum(raw)+(msg?'&text='+encodeURIComponent(msg):'')),700);
+    /* If screen control is on, Nova taps Send for you */
+    const C=P('NovaControl');
+    if(msg && NATIVE && C){
+      try{
+        const st=await C.status();
+        if(st && st.enabled){
+          setTimeout(()=>{ C.tapText({text:'Send'}).catch(()=>{}); },4200);
+          return 'Sending your WhatsApp to '+c.name+'.';
+        }
+      }catch(e){}
+    }
+    return 'Opening WhatsApp for '+c.name+(msg?'. Tap send when you are ready.':'.');
+  }
+
+  /* ---------- Installed apps (native app only) ---------- */
+  let appCache=null;
+  async function loadApps(){
+    if(appCache) return appCache;
+    const A=P('Apps');
+    if(!A) throw new Error('Opening apps by name only works in the Nova app.');
+    const r=await A.list();
+    appCache=(r.apps||[]).map(a=>({name:a.name,pkg:a.pkg,low:(a.name||'').toLowerCase()}));
+    return appCache;
+  }
+  function findApp(apps,q){
+    q=q.toLowerCase().trim(); if(!q) return null;
+    let best=null,score=0;
+    for(const a of apps){
+      let sc=0;
+      if(a.low===q) sc=100; else if(a.low.startsWith(q)) sc=80; else if(a.low.split(/\s+/).some(w=>w===q)) sc=70; else if(a.low.includes(q)) sc=50; else if(q.includes(a.low) && a.low.length>3) sc=40;
+      if(sc>score){score=sc;best=a;}
+    }
+    return best;
+  }
+  async function openApp(name){
+    let apps;
+    try{ apps=await loadApps(); }catch(e){ return e.message; }
+    const a=findApp(apps,name);
+    if(!a) return null;
+    setTimeout(()=>{ P('Apps').launch({pkg:a.pkg}).catch(()=>sys('Could not open '+a.name+'.')); },700);
+    return 'Opening '+a.name+'.';
+  }
+
+  /* ---------- Native speech (native app only) ---------- */
+  async function nativeListen(){
+    const S=P('SpeechRecognition');
+    if(!S){ sys('Speech plugin is missing in this build.'); return; }
+    try{
+      try{ await (S.requestPermissions ? S.requestPermissions() : S.requestPermission()); }catch(e){}
+      setState('listening');
+      const r=await S.start({language:'en-US',maxResults:1,prompt:'Speak to Nova',partialResults:false,popup:true});
+      setState('idle');
+      const said=r&&r.matches&&r.matches[0];
+      if(said) handle(said);
+    }catch(e){
+      setState('idle');
+      sys('Could not listen: '+((e&&e.message)||e));
+    }
+  }
+  function num(s){ return s.replace(/[^\d+]/g,''); }
+
+  function parseDuration(t){
+    let ms=0,m;
+    const re=/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?)/g;
+    while((m=re.exec(t))){
+      const n=parseFloat(m[1]), u=m[2][0];
+      ms += u==='h'? n*3600000 : u==='m'? n*60000 : n*1000;
+    }
+    return ms;
+  }
+  function fmtDur(ms){
+    const s=Math.round(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), x=s%60;
+    const p=[]; if(h)p.push(h+(h>1?' hours':' hour')); if(m)p.push(m+(m>1?' minutes':' minute')); if(x)p.push(x+(x>1?' seconds':' second'));
+    return p.join(' ');
+  }
+
+  /* ---------- Time helpers: alarms, reminders, calendar ---------- */
+  function to24(h,mi,ap){
+    ap=(ap||'').toLowerCase().replace(/\./g,'');
+    if(ap==='pm' && h<12) h+=12;
+    if(ap==='am' && h===12) h=0;
+    if(h>23||mi>59) return null;
+    return {h:h,mi:mi};
+  }
+  function findClock(t){
+    let m=t.match(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)(?![a-z])/i);
+    if(m){ const c=to24(parseInt(m[1],10),m[2]?parseInt(m[2],10):0,m[3]); if(c){ c.text=m[0]; return c; } }
+    m=t.match(/(\d{1,2}):(\d{2})/);
+    if(m){ const c=to24(parseInt(m[1],10),parseInt(m[2],10),''); if(c){ c.text=m[0]; return c; } }
+    m=t.match(/\bat\s+(\d{1,2})(?![\d:])/);
+    if(m){ const c=to24(parseInt(m[1],10),0,''); if(c){ c.text=m[0]; return c; } }
+    return null;
+  }
+  function fmtClock(h,mi){
+    const ap=h>=12?'PM':'AM', hh=h%12===0?12:h%12;
+    return hh+':'+String(mi).padStart(2,'0')+' '+ap;
+  }
+  const DAYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  function dayFrom(t){
+    const d=new Date(); d.setHours(0,0,0,0);
+    if(/\btomorrow\b/.test(t)){ d.setDate(d.getDate()+1); return {date:d,word:'tomorrow'}; }
+    if(/\b(today|tonight)\b/.test(t)) return {date:d,word:'today'};
+    for(let i=0;i<7;i++){
+      if(new RegExp('\\b'+DAYS[i]+'\\b').test(t)){
+        let diff=(i-d.getDay()+7)%7; if(diff===0) diff=7;
+        d.setDate(d.getDate()+diff);
+        return {date:d,word:DAYS[i]};
+      }
+    }
+    return null;
+  }
+  function eventTitle(s,clockText,dayWord){
+    let t=s;
+    if(clockText) t=t.replace(clockText,' ');
+    if(dayWord) t=t.replace(new RegExp('\\b'+dayWord+'\\b','i'),' ').replace(/\b(today|tonight|tomorrow)\b/i,' ');
+    t=t.replace(/\s+/g,' ').trim();
+    while(/\b(on|at|for|by)$/i.test(t)) t=t.replace(/\s*\b(on|at|for|by)$/i,'').trim();
+    t=t.replace(/^(an?|the)\s+/i,'').trim();
+    if(!t) t='Event';
+    return t.charAt(0).toUpperCase()+t.slice(1);
+  }
+  function rangeFor(word){
+    const a=new Date(); a.setHours(0,0,0,0);
+    const b=new Date(a);
+    if(word==='tomorrow'){ a.setDate(a.getDate()+1); b.setDate(b.getDate()+2); }
+    else if(word==='this week'){ b.setDate(b.getDate()+7); }
+    else { b.setDate(b.getDate()+1); }
+    return {a:a,b:b};
+  }
+
+  /* ---------- Phone control: battery, storage, volume, flashlight, info and more (native app only) ---------- */
+  const SETTINGS_PAGES={
+    'phone':'main','wifi':'wifi','wi-fi':'wifi','bluetooth':'bluetooth','display':'display','brightness':'display',
+    'sound':'sound','volume':'sound','battery':'battery','battery optimization':'battery_optimization',
+    'location':'location','app':'apps','apps':'apps','accessibility':'accessibility',
+    'notification access':'notification_access','notification':'notification_access','notifications':'notification_access',
+    'airplane':'airplane','airplane mode':'airplane','nfc':'nfc','date':'date','storage':'storage',
+    'all files':'all_files','modify system':'write_settings','write':'write_settings',
+    'overlay':'overlay','display over other apps':'overlay','do not disturb':'dnd','dnd':'dnd',
+    'developer':'developer','developer options':'developer','about phone':'about','about':'about'
+  };
+  const FOLDERS={
+    download:['Download',''],
+    photo:['DCIM/Camera','jpg,jpeg,png,webp,heic,gif'],
+    picture:['Pictures',''],
+    music:['Music','mp3,m4a,wav,flac,aac,ogg'],
+    document:['Documents',''],
+    video:['DCIM/Camera','mp4,mkv,3gp,mov,webm'],
+    screenshot:['Pictures/Screenshots','']
+  };
+  function phoneErr(e){
+    const s=(e&&e.message)||String(e);
+    if(s==='needs_permission') return 'I need special access for that. I opened the settings screen, so switch it on for Nova, then ask me again.';
+    return 'That did not work: '+s;
+  }
+  function ctlErr(e){
+    const s=(e&&e.message)||String(e);
+    if(s==='service_off'){
+      const D=P('NovaDevice'); if(D) D.openSettings({page:'accessibility'}).catch(()=>{});
+      return 'Screen control is off. I opened Accessibility settings. Find Nova there and switch it on. If Android says the setting is restricted, open Nova in App info, tap the three dots, choose Allow restricted settings, then try again.';
+    }
+    return 'That did not work: '+s;
+  }
+
+  function infoText(i,b,s,n){
+    const lines=[];
+    lines.push('Device: '+(i.manufacturer||i.brand)+' '+i.model+' ('+i.device+')');
+    lines.push('Android: '+i.android+' (SDK '+i.sdk+'), security patch '+i.patch);
+    lines.push('Chip: '+i.hardware+' / '+i.board+', '+i.cores+' cores, '+i.abis);
+    lines.push('RAM: '+i.ramTotalGb+' GB total, '+i.ramUsedPercent+' percent in use');
+    lines.push('Storage: '+i.storageFreeGb+' GB free of '+i.storageTotalGb+' GB');
+    lines.push('Screen: '+i.screen+' at '+i.dpi+' dpi');
+    if(b) lines.push('Battery: '+b.percent+' percent'+(b.charging?', charging':'')+', health '+(i.batteryHealth||'unknown')+(i.batteryVolt?', '+i.batteryVolt+' V':'')+(b.temp?', '+b.temp+' C':''));
+    if(n) lines.push('Network: '+(n.type==='wifi'?'Wi-Fi':n.type==='mobile'?'mobile data':n.type)+(i.operator?', '+i.operator:''));
+    lines.push('Sensors: '+i.sensors);
+    lines.push('Developer options: '+(i.devOptions?'on':'off')+', USB debugging: '+(i.usbDebugging?'on':'off'));
+    lines.push('Language: '+i.language+', time zone '+i.timezone);
+    lines.push('Build: '+i.buildId);
+    lines.push('Up for: '+fmtDur(i.uptimeMs));
+    return lines.join('\n');
+  }
+
+  let watchTimer=null;
+  function startWatchPoll(term){
+    const C=P('NovaControl'); if(!C) return;
+    if(watchTimer) clearInterval(watchTimer);
+    let ticks=0;
+    watchTimer=setInterval(async ()=>{
+      ticks++;
+      try{
+        const r=await C.watchStatus();
+        if(r && r.hit){ clearInterval(watchTimer); watchTimer=null; reply('I found "'+r.hit+'" on your screen.'); }
+        else if(r && !r.term){ clearInterval(watchTimer); watchTimer=null; }
+      }catch(e){ clearInterval(watchTimer); watchTimer=null; }
+      if(ticks>400 && watchTimer){ clearInterval(watchTimer); watchTimer=null; }
+    },3000);
+  }
+
+  /* Screen control: tap, type, scroll, read, watch (needs the Accessibility service) */
+  function controlCmd(t){
+    const C=P('NovaControl'); if(!C) return null;
+    let m;
+    const ok=(txt,bad)=>r=> (r && r.ok===false) ? (bad||'I could not do that on this screen.') : txt;
+
+    if(/^(?:enable|turn on|set ?up|activate)\s+(?:screen control|accessibility)$/.test(t)){
+      return C.status().then(s=>{
+        if(s.enabled) return 'Screen control is already on.';
+        return ctlErr(new Error('service_off'));
+      },ctlErr);
+    }
+    if(/^(?:press |tap )?(?:the )?back(?: button)?$|^go back$/.test(t)) return C.press({action:'back'}).then(ok('Going back.'),ctlErr);
+    if(/^(?:go|take me) (?:to )?(?:the )?home(?: screen)?$|^press home$|^home screen$/.test(t)) return C.press({action:'home'}).then(ok('Going home.'),ctlErr);
+    if(/^(?:show |open )?(?:recent apps|recents|app switcher)$/.test(t)) return C.press({action:'recents'}).then(ok('Showing recent apps.'),ctlErr);
+    if(/^(?:show |open |pull down )(?:the )?notifications?(?: panel| shade| bar)?$|^notifications$/.test(t)) return C.press({action:'notifications'}).then(ok('Opening notifications.'),ctlErr);
+    if(/quick settings/.test(t) && /^(?:show|open|pull down)/.test(t)) return C.press({action:'quick_settings'}).then(ok('Opening quick settings.'),ctlErr);
+    if(/^lock (?:the )?(?:screen|phone)$/.test(t)) return C.press({action:'lock'}).then(ok('Locking the screen.','Locking needs Android 9 or newer.'),ctlErr);
+    if(/^take (?:a )?screenshot$/.test(t)) return C.press({action:'screenshot'}).then(ok('Taking a screenshot.','Screenshots need Android 9 or newer.'),ctlErr);
+
+    if((m=t.match(/^scroll\s+(down|up)(?:\s+(?:a lot|more|again))?$/))) return C.scroll({direction:m[1]}).then(ok('Scrolling '+m[1]+'.'),ctlErr);
+    if((m=t.match(/^swipe\s+(left|right|up|down)$/))) return C.swipe({direction:m[1]}).then(ok('Swiping '+m[1]+'.'),ctlErr);
+    if((m=t.match(/^tap\s+(?:at\s+)?(\d{1,4})[\s,]+(\d{1,4})$/))) return C.tap({x:parseInt(m[1],10),y:parseInt(m[2],10)}).then(ok('Tapped.'),ctlErr);
+    if((m=t.match(/^(?:tap|click|press|touch|select)\s+(?:on\s+)?(?:the\s+)?(.+?)(?:\s+button)?$/))){
+      const label=m[1];
+      return C.tapText({text:label}).then(r=> (r&&r.ok) ? 'Tapped '+label+'.' : 'I could not find "'+label+'" on the screen.',ctlErr);
+    }
+    if((m=t.match(/^type\s+(.+)$/))) return C.typeText({text:m[1]}).then(r=> (r&&r.ok) ? 'Typed it.' : 'I could not find a text box to type in. Tap a text field first.',ctlErr);
+
+    if(/^(?:what'?s|what is)\s+(?:on\s+)?(?:my\s+|the\s+)?screen$|^read\s+(?:my\s+|the\s+)?screen$|^what do you see$|^describe\s+(?:my\s+|the\s+)?screen$/.test(t)){
+      return C.readScreen().then(r=>{
+        const txt=(r.text||'').trim();
+        if(!txt) return {say:'I can not see any text on this screen. It may be an image, a video, or an app that blocks screen reading.',show:'Nothing readable on screen ('+(r.app||'unknown app')+').'};
+        const short=txt.length>320?txt.slice(0,320)+'...':txt;
+        return {say:'You are in '+(r.app||'an app')+'. I can see: '+short,show:'App: '+(r.app||r.package)+'\n\n'+txt};
+      },ctlErr);
+    }
+    if(/^(?:which|what) app (?:am i|is) (?:in|open|on|this)|^what app is this$/.test(t)){
+      return C.foreground().then(r=> r.app ? 'You are in '+r.app+'.' : 'I can not tell which app is open.',ctlErr);
+    }
+    if((m=t.match(/^(?:watch|monitor)\s+(?:my\s+|the\s+)?screen\s+(?:for|until|till)\s+(.+)$/))){
+      const term=m[1].trim();
+      return C.watchFor({text:term}).then(()=>{ startWatchPoll(term); return 'Okay. I will watch your screen for "'+term+'" and vibrate when I see it.'; },ctlErr);
+    }
+    if(/^stop (?:watching|monitoring)(?: (?:my )?screen)?$/.test(t)){
+      if(watchTimer){ clearInterval(watchTimer); watchTimer=null; }
+      return C.stopWatch().then(()=>'Stopped watching your screen.',ctlErr);
+    }
+    return null;
+  }
+
+  function deviceCmd(t){
+    const D=P('NovaDevice'); if(!D) return null;
+    let m;
+
+    if(/^(?:redial|call (?:the )?(?:last|previous) (?:number|person|one)|call (?:him |her |them )?again)$/.test(t)){
+      return D.lastCalled().then(r=>{
+        if(!r.number) return 'I could not find a last outgoing call.';
+        setTimeout(()=>dial(r.number),700);
+        return 'Calling your last number again.';
+      },phoneErr);
+    }
+
+    if(/^(call|dial|phone|text|sms|whatsapp|message|send|play|navigate|search|google)\b/.test(t)) return null;
+
+    if(/\b(full|complete|all)\s+(?:phone |device )?(?:info|information|details|specs)\b|\b(?:phone|device)\s+(?:details|specs|specifications)\b|\bsystem info\b|\busb debugging\b/.test(t)){
+      return Promise.all([D.fullInfo(),D.battery().catch(()=>null),D.network().catch(()=>null)]).then(a=>{
+        const i=a[0], b=a[1], n=a[2];
+        const say='This is a '+(i.manufacturer||i.brand)+' '+i.model+' on Android '+i.android+', with '+i.ramTotalGb+' gigabytes of RAM and '+i.storageFreeGb+' gigabytes free storage.'
+          +(b?' Battery is at '+b.percent+' percent.':'')+' Developer options are '+(i.devOptions?'on':'off')+' and USB debugging is '+(i.usbDebugging?'on':'off')+'. The full details are in the chat.';
+        return {say:say,show:infoText(i,b,null,n)};
+      },phoneErr);
+    }
+
+    if(/\bdeveloper options?\b/.test(t) && !/\b(turn|switch)\s+(on|off)\b/.test(t)){
+      return D.openSettings({page:'developer'}).then(()=>'Opening developer options. If it does not open, go to About phone and tap Build number seven times to unlock it.',phoneErr);
+    }
+
+    if((m=t.match(/^(?:open|show|go to|take me to)\s+(?:the\s+|my\s+)?(?:(.+?)\s+)?settings$/))){
+      const key=(m[1]||'phone').trim(), page=SETTINGS_PAGES[key];
+      if(page){
+        const label=m[1]?key+' settings':'settings';
+        return D.openSettings({page:page}).then(()=>'Opening '+label+'.',phoneErr);
+      }
+    }
+
+    if((m=t.match(/(?:turn|switch|put)\s+(on|off)\s+(?:the\s+|my\s+)?(wi-?fi|bluetooth|mobile data|data|airplane mode|location)\b/))){
+      const key=m[2]==='data'?'mobile data':m[2];
+      const pages={'wifi':'wifi','wi-fi':'wifi','bluetooth':'bluetooth','mobile data':'main','airplane mode':'airplane','location':'location'};
+      return D.openSettings({page:pages[key]||'main'}).then(
+        ()=>'Android does not let apps switch '+key+' directly, so I opened its settings for you to tap.',phoneErr);
+    }
+
+    if(/\bbattery\b/.test(t) && /\b(how much|what'?s|what is|check|level|percent|percentage|left|status|charging|charge)\b/.test(t) && !/\b(car|electric|laptop|tesla|invent)\b/.test(t)){
+      return D.battery().then(b=>
+        'Your battery is at '+b.percent+' percent'+(b.charging?' and charging.':'.')+(b.temp?(' It is '+b.temp+' degrees Celsius.'):''),phoneErr);
+    }
+
+    if(/\bstorage\b|\b(free|phone|disk) (space|memory)\b|\bspace (?:is )?(?:left|remaining)\b|\b(my|the|phone) ram\b|\bram (?:usage|left|free)\b/.test(t) && !/\b(open|settings)\b/.test(t)){
+      return D.storage().then(s=>
+        'You have '+s.freeGb+' gigabytes free out of '+s.totalGb+' on your phone. Memory in use is '+s.ramUsedPercent+' percent.',phoneErr);
+    }
+
+    if(/\b(internet|network|wi-?fi|mobile data|online)\b/.test(t) && /^(?:am i|are we|are you|check|is my|is the|what'?s my|what is my|how'?s my|how is my)/.test(t)){
+      return D.network().then(n=>{
+        if(n.type==='none') return 'You are offline right now.';
+        return 'You are online through '+(n.type==='wifi'?'Wi-Fi':n.type==='mobile'?'mobile data':n.type)+'.';
+      },phoneErr);
+    }
+
+    if(/\bwhat phone (?:is this|do i have|am i using)\b|\bwhich phone is this\b|\bphone model\b|\bdevice info\b|\bandroid version\b|\buptime\b|\babout (?:this|my) phone\b|\bphone info\b/.test(t)){
+      return D.device().then(d=>
+        'This is a '+d.manufacturer+' '+d.model+' running Android '+d.android+'. It has been on for '+fmtDur(d.uptimeMs)+'.',phoneErr);
+    }
+
+    if(/\bvolume\b|\bmute\b|\blouder\b|\bquieter\b/.test(t)){
+      let a=null;
+      if((m=t.match(/(\d{1,3})\s*(?:%|percent)?/)) && /\bvolume\b/.test(t) && /\b(set|to|at|put|make)\b/.test(t)) a={percent:Math.min(100,parseInt(m[1],10))};
+      else if(/\b(max|maximum|full)\b/.test(t)) a={percent:100};
+      else if(/\b(mute|silent|silence)\b/.test(t)) a={percent:0};
+      else if(/\b(up|louder|increase|raise|higher)\b/.test(t)) a={direction:'up'};
+      else if(/\b(down|quieter|lower|decrease|reduce)\b/.test(t)) a={direction:'down'};
+      if(a) return D.setVolume(a).then(r=>'Volume is now '+r.percent+' percent.',phoneErr);
+    }
+
+    if(/\b(brightness|brighter|dim)\b/.test(t)){
+      let a=null;
+      if((m=t.match(/(\d{1,3})\s*(?:%|percent)?/)) && /\bbrightness\b/.test(t) && /\b(set|to|at|put|make)\b/.test(t)) a={percent:Math.min(100,parseInt(m[1],10))};
+      else if(/\b(max|maximum|full)\b/.test(t)) a={percent:100};
+      else if(/\b(min|minimum|lowest)\b/.test(t)) a={percent:5};
+      else if(/\b(up|brighter|increase|raise|higher)\b/.test(t)) a={direction:'up'};
+      else if(/\b(down|dim|lower|decrease|reduce)\b/.test(t)) a={direction:'down'};
+      if(a) return D.setBrightness(a).then(r=>'Brightness is now '+r.percent+' percent.',phoneErr);
+    }
+
+    if(/\b(flash ?light|torch)\b/.test(t)){
+      const on=!/\b(off|stop|disable|kill)\b/.test(t);
+      return D.flashlight({on:on}).then(()=>on?'Flashlight on.':'Flashlight off.',phoneErr);
+    }
+
+    if((m=t.match(/^(?:show|list|check|what'?s in|what is in)\s+(?:me\s+)?(?:my\s+|the\s+)?(?:(?:latest|recent|newest)\s+)?(downloads?|photos?|pictures?|music|documents?|videos?|screenshots?)(?:\s+folder)?$/))
+       || (m=t.match(/^(?:my\s+)?(?:latest|recent|newest)\s+(downloads?|photos?|pictures?|music|documents?|videos?|screenshots?)$/))){
+      const what=m[1], f=FOLDERS[what.replace(/s$/,'')];
+      if(f){
+        return D.listFiles({folder:f[0],exts:f[1],limit:5}).then(r=>{
+          if(!r.count) return 'I found no matching files in '+f[0]+'.';
+          return 'Your latest '+what+': '+r.files.map(x=>x.name).join(', ')+'. '+r.count+' in total.';
+        },phoneErr);
+      }
+    }
+
+    return null;
+  }
+
+  /* ---------- Location and maps ---------- */
+  async function getPos(){
+    const G=P('Geolocation');
+    if(NATIVE && G){
+      try{ await G.requestPermissions(); }catch(e){}
+      const r=await G.getCurrentPosition({enableHighAccuracy:true,timeout:12000});
+      return {lat:r.coords.latitude,lng:r.coords.longitude};
+    }
+    return new Promise((res,rej)=>{
+      if(!navigator.geolocation) return rej(new Error('no location'));
+      navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lng:p.coords.longitude}),e=>rej(e),{enableHighAccuracy:true,timeout:12000});
+    });
+  }
+  function km(a,b){
+    const R=6371, rad=x=>x*Math.PI/180;
+    const dLat=rad(b.lat-a.lat), dLng=rad(b.lng-a.lng);
+    const h=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function fmtKm(d){ return d<1 ? Math.round(d*1000)+' metres' : (d<10 ? d.toFixed(1) : Math.round(d))+' kilometres'; }
+  async function fetchJson(url,opts,ms){
+    const ctl=new AbortController(); const id=setTimeout(()=>ctl.abort(),ms||9000);
+    try{
+      const r=await fetch(url,Object.assign({signal:ctl.signal},opts||{}));
+      if(!r.ok) throw new Error('http '+r.status);
+      return await r.json();
+    } finally { clearTimeout(id); }
+  }
+
+  const PLACES={
+    hospital:{label:'hospital',f:['["amenity"="hospital"]','["healthcare"="hospital"]']},
+    clinic:{label:'clinic',f:['["amenity"="clinic"]','["amenity"="doctors"]']},
+    pharmacy:{label:'pharmacy',f:['["amenity"="pharmacy"]']},
+    police:{label:'police station',f:['["amenity"="police"]']},
+    fire:{label:'fire station',f:['["amenity"="fire_station"]']},
+    atm:{label:'ATM',f:['["amenity"="atm"]']},
+    bank:{label:'bank',f:['["amenity"="bank"]']},
+    fuel:{label:'petrol station',f:['["amenity"="fuel"]']},
+    restaurant:{label:'restaurant',f:['["amenity"="restaurant"]','["amenity"="fast_food"]']},
+    hotel:{label:'hotel',f:['["tourism"="hotel"]','["tourism"="guest_house"]']},
+    supermarket:{label:'supermarket',f:['["shop"="supermarket"]','["shop"="convenience"]']},
+    school:{label:'school',f:['["amenity"="school"]']},
+    church:{label:'church',f:['["amenity"="place_of_worship"]["religion"="christian"]']},
+    mosque:{label:'mosque',f:['["amenity"="place_of_worship"]["religion"="muslim"]']},
+    market:{label:'market',f:['["amenity"="marketplace"]']},
+    mechanic:{label:'car repair shop',f:['["shop"="car_repair"]']}
+  };
+  function placeKey(w){
+    w=w.toLowerCase();
+    if(/hospital|emergency|accident|\ber\b/.test(w)) return 'hospital';
+    if(/clinic|doctor|health ?cent/.test(w)) return 'clinic';
+    if(/pharmac|chemist|drug ?store/.test(w)) return 'pharmacy';
+    if(/police/.test(w)) return 'police';
+    if(/fire (?:station|service)/.test(w)) return 'fire';
+    if(/\batm\b|cash machine/.test(w)) return 'atm';
+    if(/\bbank\b/.test(w)) return 'bank';
+    if(/fuel|petrol|gas station|filling station/.test(w)) return 'fuel';
+    if(/restaurant|eatery|food|buka/.test(w)) return 'restaurant';
+    if(/hotel|guest ?house|lodge/.test(w)) return 'hotel';
+    if(/supermarket|shop|grocery|store/.test(w)) return 'supermarket';
+    if(/school/.test(w)) return 'school';
+    if(/church/.test(w)) return 'church';
+    if(/mosque/.test(w)) return 'mosque';
+    if(/market/.test(w)) return 'market';
+    if(/mechanic|car repair|auto repair|garage/.test(w)) return 'mechanic';
+    return null;
+  }
+  async function findNearest(def,pos){
+    const ends=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+    for(const radius of [5000,20000]){
+      let q='[out:json][timeout:12];(';
+      def.f.forEach(f=>{ q+='node'+f+'(around:'+radius+','+pos.lat+','+pos.lng+');way'+f+'(around:'+radius+','+pos.lat+','+pos.lng+');'; });
+      q+=');out center 40;';
+      for(const ep of ends){
+        try{
+          const d=await fetchJson(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)},12000);
+          let best=null;
+          (d.elements||[]).forEach(e=>{
+            const lat=e.lat!==undefined?e.lat:(e.center&&e.center.lat), lng=e.lon!==undefined?e.lon:(e.center&&e.center.lon);
+            if(lat===undefined||lng===undefined) return;
+            const dist=km(pos,{lat:lat,lng:lng});
+            if(!best||dist<best.dist) best={lat:lat,lng:lng,dist:dist,name:(e.tags&&(e.tags.name||e.tags['name:en']))||''};
+          });
+          if(best) return best;
+          break;
+        }catch(e){}
+      }
+    }
+    return null;
+  }
+  async function nearest(word){
+    word=word.replace(/\b(?:to me|near me|around me|from here|from me|close by|here)\b/g,'').trim();
+    const key=placeKey(word);
+    let pos=null; try{ pos=await getPos(); }catch(e){ pos=null; }
+    if(!pos){
+      setTimeout(()=>openUrl('https://www.google.com/maps/search/'+encodeURIComponent(word+' near me')),900);
+      return 'I could not get your location, so I opened Maps to search for '+word+' near you. Check that location is on and Nova has permission.';
+    }
+    const around='/@'+pos.lat+','+pos.lng+',14z';
+    if(!key){
+      setTimeout(()=>openUrl('https://www.google.com/maps/search/'+encodeURIComponent(word)+around),900);
+      return 'Showing '+word+' near you on the map.';
+    }
+    const def=PLACES[key]; let best=null;
+    try{ best=await findNearest(def,pos); }catch(e){ best=null; }
+    const sos = key==='hospital' ? ' If it is an emergency, call 112.' : '';
+    if(!best){
+      setTimeout(()=>openUrl('https://www.google.com/maps/search/'+encodeURIComponent(def.label)+around),900);
+      return 'I could not find a '+def.label+' in my map data, so I opened Maps to search near you.'+sos;
+    }
+    setTimeout(()=>openUrl('https://www.google.com/maps/dir/?api=1&destination='+best.lat+','+best.lng+'&travelmode=driving'),900);
+    return 'The closest '+def.label+' is '+(best.name||'one')+', about '+fmtKm(best.dist)+' away. Opening directions.'+sos;
+  }
+  async function geocode(q){
+    const d=await fetchJson('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}},9000);
+    if(!d||!d.length) return null;
+    return {lat:parseFloat(d[0].lat),lng:parseFloat(d[0].lon),name:d[0].display_name};
+  }
+  function shortName(n){ return (n||'').split(',').slice(0,3).join(',').trim(); }
+  async function whereAmI(){
+    let pos; try{ pos=await getPos(); }catch(e){ return 'I could not get your location. Check that location is on and Nova has permission.'; }
+    let place='';
+    try{
+      const d=await fetchJson('https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat='+pos.lat+'&lon='+pos.lng,{headers:{'Accept':'application/json'}},9000);
+      place=shortName(d&&d.display_name);
+    }catch(e){}
+    setTimeout(()=>openUrl('https://www.google.com/maps/search/?api=1&query='+pos.lat+','+pos.lng),900);
+    return place ? 'You are near '+place+'. Showing it on the map.' : 'Showing your location on the map.';
+  }
+  async function whereIs(q){
+    setTimeout(()=>openUrl('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)),900);
+    try{
+      const g=await geocode(q);
+      if(g) return q+' is at '+shortName(g.name)+'. Showing it on the map.';
+    }catch(e){}
+    return 'Showing '+q+' on the map.';
+  }
+  async function howFar(q){
+    let pos; try{ pos=await getPos(); }catch(e){ return 'I could not get your location, so I can not measure the distance.'; }
+    let g=null; try{ g=await geocode(q); }catch(e){ g=null; }
+    if(!g){
+      setTimeout(()=>openUrl('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q)+'&travelmode=driving'),900);
+      return 'I could not look up '+q+' myself, so I opened directions in Maps.';
+    }
+    try{
+      const d=await fetchJson('https://router.project-osrm.org/route/v1/driving/'+pos.lng+','+pos.lat+';'+g.lng+','+g.lat+'?overview=false',{},9000);
+      if(d&&d.routes&&d.routes[0]){
+        const mins=Math.round(d.routes[0].duration/60);
+        const t= mins>=60 ? Math.floor(mins/60)+' hours '+(mins%60)+' minutes' : mins+' minutes';
+        return q+' is about '+fmtKm(d.routes[0].distance/1000)+' away by road, around '+t+' by car. Say navigate to '+q+' for directions.';
+      }
+    }catch(e){}
+    return q+' is about '+fmtKm(km(pos,g))+' away in a straight line. Say navigate to '+q+' for road directions.';
+  }
+
+  function local(raw){
+    const lowRaw=raw.toLowerCase();
+    const t=lowRaw.replace(/[?!.,]+$/,'').trim()
+      .replace(/^(hey |ok |okay )?nova[,\s]+/,'')
+      .replace(/^(please|can you|could you|would you|i want you to|i want to|i wanna|go to [a-z ]+? and)\s+/,'')
+      .replace(/\s+please$/,'').trim();
+    let m;
+
+    if((/\btime\b/.test(t) && /\b(what|tell|current|now)\b/.test(t) && !/timer/.test(t)) || /^time$/.test(t))
+      return 'It is '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})+'.';
+    if(/(what('?s| is)|tell me) (the |today'?s )?(date|day)|what day is it|today'?s date/.test(t))
+      return 'Today is '+new Date().toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'})+'.';
+
+    /* ----- notes ----- */
+    if((m=t.match(/^(?:write|take|make|save|add|create|jot down)\s+(?:a\s+|me a\s+)?note(?:\s+(?:that|saying|to|about)|\s*:)?\s*(.+)$/)) || (m=lowRaw.trim().match(/^note(?:\s+that|\s*:)?\s+(.+)$/)) || (m=t.match(/^remember\s+(?:that\s+)?(.+)$/))){
+      const body=m[1].trim().replace(/[.!]+$/,'');
+      if(body){ const txt=body.charAt(0).toUpperCase()+body.slice(1); addNote(txt); return 'Noted. I saved: '+txt+'.'; }
+    }
+    if(/^(?:show|read|list|open|what are)\s+(?:me\s+)?(?:my\s+)?notes$|^my notes$/.test(t)){
+      if(!notes.length) return 'You have no notes yet. Say write a note, then what you want to remember.';
+      const top=notes.slice(0,5).map((n,i)=>(i+1)+': '+n.t).join('. ');
+      return 'You have '+notes.length+(notes.length===1?' note. ':' notes. ')+top+'.';
+    }
+    if((m=t.match(/^(?:delete|remove)\s+note\s+(\d+)$/))){
+      const i=parseInt(m[1],10)-1;
+      if(i>=0 && i<notes.length){ const gone=notes.splice(i,1)[0]; saveNotes(); renderNotes(); return 'Deleted note '+(i+1)+': '+gone.t+'.'; }
+      return 'I could not find note '+m[1]+'.';
+    }
+    if(/^(?:delete|clear|remove)\s+(?:all\s+)?(?:my\s+)?notes$/.test(t)){ const n=notes.length; notes=[]; saveNotes(); renderNotes(); return n?'Deleted all '+n+' notes.':'You have no notes to delete.'; }
+
+    /* ----- calendar ----- */
+    if((m=t.match(/^(?:what'?s|what is|show|read|check|any)\s+(?:on\s+|in\s+)?(?:my\s+)?(?:calendar|schedule|agenda)(?:\s+(?:for|on))?\s*(today|tomorrow|this week)?$/)) || (m=t.match(/^what do i have\s+(today|tomorrow|this week)$/)) || (m=t.match(/^do i have (?:any )?(?:meetings?|events?|appointments?)\s*(today|tomorrow|this week)?$/))){
+      const word=m[1]||'today';
+      const D=P('NovaDevice');
+      if(!(NATIVE && D)) return 'I can read your calendar in the Nova app.';
+      const rg=rangeFor(word);
+      return D.calendarEvents({begin:String(rg.a.getTime()),end:String(rg.b.getTime())}).then(r=>{
+        const ev=(r.events||[]).sort((x,y)=>x.begin-y.begin);
+        if(!ev.length) return 'You have nothing on your calendar '+(word==='this week'?'this week':word)+'.';
+        const parts=ev.slice(0,6).map(e=>{
+          if(e.allDay) return (e.title||'Event')+' all day';
+          const d=new Date(e.begin);
+          return (e.title||'Event')+' at '+fmtClock(d.getHours(),d.getMinutes())+(word==='this week'?' on '+DAYS[d.getDay()]:'');
+        });
+        return 'You have '+ev.length+(ev.length===1?' event ':' events ')+(word==='this week'?'this week':word)+': '+parts.join(', ')+'.';
+      },phoneErr);
+    }
+    if((m=t.match(/^(?:add|put|create|schedule|book|set up)\s+(.+?)\s+(?:to|on|in|into)\s+(?:my\s+)?calendar(?:\s+(.+))?$/)) || (m=t.match(/^(?:add|create|schedule|book|set up)\s+(?:an?\s+)?(?:event|meeting|appointment)\s+(.+)$/)) || (m=t.match(/^schedule\s+(.+)$/))){
+      const D=P('NovaDevice');
+      if(!(NATIVE && D)) return 'Calendar events work in the Nova app.';
+      const body=m[1]+(m[2]?' '+m[2]:''), clk=findClock(body), dy=dayFrom(body);
+      const start=new Date();
+      let usedDefault=false;
+      if(dy){ start.setTime(dy.date.getTime()); } else { start.setHours(0,0,0,0); }
+      if(clk){ start.setHours(clk.h,clk.mi,0,0); } else { start.setHours(9,0,0,0); usedDefault=true; }
+      if(!dy && start.getTime()<Date.now()) start.setDate(start.getDate()+1);
+      const end=new Date(start.getTime()+3600000);
+      const title=eventTitle(body,clk&&clk.text,dy&&dy.word);
+      return D.addEvent({title:title,begin:String(start.getTime()),end:String(end.getTime())}).then(()=>{
+        const dayName=start.toDateString()===new Date().toDateString()?'today':start.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
+        return 'Opening your calendar with '+title+' on '+dayName+' at '+fmtClock(start.getHours(),start.getMinutes())+(usedDefault?' (I used 9 AM because you did not say a time)':'')+'. Tap save to confirm.';
+      },phoneErr);
+    }
+
+    /* ----- alarms and reminders ----- */
+    if((m=t.match(/^(?:set|create|add|make)?\s*(?:an?\s+)?alarm\s+(?:for|at)\s+(.+)$/)) || (m=t.match(/^wake me(?: up)?\s+(?:at|by|for)\s+(.+)$/))){
+      const arg=m[1], D=P('NovaDevice');
+      const dur=parseDuration(arg);
+      if(dur>0 && !/\b(am|pm)\b/.test(arg)){
+        if(NATIVE && D) return D.setTimer({seconds:Math.round(dur/1000),message:'Nova alarm'}).then(()=>'Alarm set to ring in '+fmtDur(dur)+'.',phoneErr);
+        return 'Alarms work in the Nova app.';
+      }
+      let c=findClock(arg);
+      if(!c){ const b=arg.trim().match(/^(\d{1,2})(?::(\d{2}))?$/); if(b) c=to24(parseInt(b[1],10),b[2]?parseInt(b[2],10):0,''); }
+      if(!c) return 'Tell me a time, like set an alarm for 6:30 am.';
+      if(!(NATIVE && D)) return 'Alarms work in the Nova app.';
+      return D.setAlarm({hour:c.h,minute:c.mi,message:'Nova alarm'}).then(()=>'Alarm set for '+fmtClock(c.h,c.mi)+'.',phoneErr);
+    }
+    if((m=t.match(/^remind me\s+(?:to\s+|about\s+)?(.+)$/))){
+      const body=m[1], D=P('NovaDevice');
+      const dur=parseDuration(body);
+      const task=body.replace(/\b(?:in|after)\s+(?:\d+(?:\.\d+)?\s*(?:hours?|hrs?|minutes?|mins?|seconds?|secs?)\s*(?:and\s*)?)+/g,' ').replace(/\s+/g,' ').trim().replace(/^to\s+/,'');
+      if(dur>0 && /\b(?:in|after)\s+\d/.test(body)){
+        const label=task||'Reminder';
+        if(NATIVE && D) return D.setTimer({seconds:Math.round(dur/1000),message:label}).then(()=>'Okay, I will remind you in '+fmtDur(dur)+'.',phoneErr);
+        const id=setTimeout(()=>reply('Reminder: '+label),dur); timers.push(id);
+        return 'Okay, I will remind you in '+fmtDur(dur)+'. Keep this page open.';
+      }
+      const c=findClock(body);
+      if(c){
+        const label=eventTitle(body,c.text,null);
+        if(!(NATIVE && D)) return 'Reminders at a set time work in the Nova app.';
+        return D.setAlarm({hour:c.h,minute:c.mi,message:label}).then(()=>'Okay, I will remind you at '+fmtClock(c.h,c.mi)+': '+label+'.',phoneErr);
+      }
+      return 'When should I remind you? Say something like remind me to call mum at 5 pm, or in 20 minutes.';
+    }
+
+    /* ----- timers ----- */
+    if((m=t.match(/(?:set|start|create)?\s*(?:a |an )?(?:timer|alarm|reminder)\s*(?:for|in)\s+(.+)/)) ){
+      const ms=parseDuration(m[1]);
+      if(ms>0){
+        const label=fmtDur(ms);
+        const D=P('NovaDevice');
+        if(NATIVE && D) return D.setTimer({seconds:Math.round(ms/1000),message:'Nova timer'}).then(()=>'Timer set for '+label+'.',phoneErr);
+        const id=setTimeout(()=>{ reply('Your '+label+' timer is done.'); try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){} },ms);
+        timers.push(id);
+        return 'Timer set for '+label+'. Keep this page open so I can tell you when it ends.';
+      }
+    }
+    if(/^(cancel|stop|clear) (all )?(my )?timers?$/.test(t)){ timers.forEach(clearTimeout); timers=[]; return 'Timers cleared.'; }
+
+    /* ----- location and maps ----- */
+    if(/^where am i$|^what('?s| is) my (?:current )?location$|^my location$|^show my location$/.test(t)) return whereAmI();
+    const near=t.match(/^(?:(?:find|show|show me|get me|take me to|navigate to|directions to|route to|where(?:'s| is)|what(?:'s| is)|i need|i want)\s+)?(?:me\s+)?(?:an?\s+|the\s+)?(?:closest|nearest|nearby)\s+(.+)$/)
+      || t.match(/^(?:i need|find me|get me)\s+(?:an?\s+)?(hospital|ambulance|doctor|pharmacy|chemist|police|mechanic)$/)
+      || t.match(/^(?:find |show me |show |search for |look for )?(?:an?\s+|the\s+)?(.+?)\s+(?:near me|nearby|around me|close by|close to me)$/);
+    if(near && !/^(?:play|call|open|text|message|whatsapp)\b/.test(near[1])) return nearest(near[1]);
+    if((m=t.match(/^how (?:far|long)(?: is it| does it take)?(?: to get| to drive| to go| to reach)? (?:to|from here to) (?:the )?(.+)$/)) || (m=t.match(/^how far is (?:the )?(.+?)(?: from (?:me|here))?$/))) return howFar(m[1]);
+    if((m=t.match(/^where(?:'s| is)\s+(?:the\s+)?(.+)$/)) && !/^(?:my|the closest|the nearest)\b/.test(m[1])) return whereIs(m[1]);
+    if((m=t.match(/^(?:show|open|find)\s+(.+?)\s+on (?:the\s+)?map$/))) return whereIs(m[1]);
+
+    if(NATIVE){ const nn=notifCmd(t); if(nn) return nn; }
+    if(NATIVE){ const c=controlCmd(t); if(c) return c; }
+    if(NATIVE){ const d=deviceCmd(t); if(d) return d; }
+
+    if(NATIVE && (m=t.match(/^(?:open|launch|start|run)\s+(?:the\s+|my\s+)?(.+?)(?:\s+app)?$/))){
+      return openApp(m[1]).then(r=>r||'I could not find an app called '+m[1]+'.');
+    }
+    if(NATIVE){
+      if((m=t.match(/^(?:call|dial|phone)\s+(?!\d)(.+)$/))) return contactAction('call',m[1]);
+      if((m=t.match(/^(?:text|sms)\s+(?!\d)(.+?)(?:\s+(?:saying|that says|and say|and tell (?:him|her|them)|tell (?:him|her|them)|that)\s+(.*))?$/))) return contactAction('sms',m[1],m[2]);
+      if((m=t.match(/^(?:whatsapp|send (?:a )?whatsapp(?: message)? to|message)\s+(?!\d)(.+?)(?:\s+(?:saying|that says|and say|and tell (?:him|her|them)|tell (?:him|her|them)|that)\s+(.*))?$/))) return contactAction('wa',m[1],m[2]);
+    }
+    if((m=t.match(/^(?:call|dial|phone)\s+(?:number\s+)?([\d\s+\-()]{6,})$/))){
+      const n=num(m[1]); setTimeout(()=>dial(n),900); return 'Calling '+n.split('').join(' ')+'.';
+    }
+    if((m=t.match(/^(?:whatsapp|send (?:a )?whatsapp(?: message)? to|message)\s+([\d\s+\-()]{7,})\s*(?:saying|that says|:)?\s*(.*)$/))){
+      const n=num(m[1]).replace(/^\+/,''); const body=m[2]?'?text='+encodeURIComponent(m[2]):'';
+      setTimeout(()=>openUrl('https://wa.me/'+n+body),900); return 'Opening WhatsApp for '+n+'.';
+    }
+    if((m=t.match(/^(?:navigate|directions?|take me|route)(?: me)?(?: to| from here to)?\s+(.+)/)) || (m=t.match(/^(?:how do i get)\s+(?:to\s+)?(.+)/))){
+      setTimeout(()=>openUrl('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(m[1])+'&travelmode=driving'),900);
+      return 'Getting directions to '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:play|put on|listen to)\s+(?:me\s+|some\s+|us\s+)?(.+?)(?:\s+on\s+(?:youtube(?: music)?|spotify))?$/))){
+      const music=/music|spotify/.test(lowRaw);
+      const url=(music?'https://music.youtube.com/search?q=':'https://www.youtube.com/results?search_query=')+encodeURIComponent(m[1]);
+      setTimeout(()=>openUrl(url),900);
+      return 'Playing '+m[1]+(music?' on YouTube Music.':' on YouTube.');
+    }
+    if((m=t.match(/^open\s+(youtube|google|whatsapp|facebook|instagram|twitter|x|tiktok|gmail|maps|spotify)$/))){
+      const map={youtube:'https://m.youtube.com',google:'https://www.google.com',whatsapp:'https://web.whatsapp.com',facebook:'https://m.facebook.com',instagram:'https://www.instagram.com',twitter:'https://x.com',x:'https://x.com',tiktok:'https://www.tiktok.com',gmail:'https://mail.google.com',maps:'https://maps.google.com',spotify:'https://open.spotify.com'};
+      setTimeout(()=>openUrl(map[m[1]]),900); return 'Opening '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:search|google|look up|search for|search google for)\s+(.+)/))){
+      setTimeout(()=>openUrl('https://www.google.com/search?q='+encodeURIComponent(m[1])),900);
+      return 'Searching for '+m[1]+'.';
+    }
+    if((m=t.match(/^(?:what is|what's|calculate|compute)\s+([\d\s+\-*/().x×÷%^]+)$/)) && /\d/.test(m[1]) && /[+\-*/x×÷^%]/.test(m[1])){
+      try{
+        const expr=m[1].replace(/x|×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+        if(/^[\d\s+\-*/().%]+$/.test(expr)){ const v=Function('"use strict";return ('+expr+')')(); if(isFinite(v)) return m[1].trim()+' equals '+(+v.toFixed(6))+'.'; }
+      }catch(e){}
+    }
+    if(/^(hi|hello|hey)( nova)?$/.test(t)) return 'Hello! What can I do for you?';
+    if(/^(thanks|thank you)( nova)?$/.test(t)) return 'You are welcome.';
+    if(/who are you|what('?s| is) your name/.test(t)) return 'I am Nova, your assistant. I can call, message, set alarms and timers, add calendar events, write notes, find the nearest hospital or ATM, read and control your screen, check phone info, play music, and answer questions.';
+    return null;
+  }
+
+  /* ---------- Open questions go to your chosen AI ---------- */
+  const SYSTEM_PROMPT='You are Nova, a voice assistant on the user\'s phone. Your replies are spoken aloud, so answer in one to three short sentences of plain text. No markdown, no lists, no emojis. If you do not know something current (news, live scores, weather), say so briefly and suggest searching.';
+  function aiErr(m){ const e=new Error(m); e.ai=true; return e; }
+  function aiHttp(status,prov){
+    if(status===401||status===403) return aiErr('Your '+prov.name+' API key was rejected. Check it in Settings.');
+    if(status===404||status===400){
+      if(provider==='groq'){ autoModel=''; store.set('nova_model',''); }
+      return aiErr(prov.name+' did not accept that request. Check the Model box in Settings.');
+    }
+    if(status===429) return aiErr(prov.name+' says you hit the rate or credit limit. Try again soon.');
+    return aiErr(prov.name+' error '+status+'.');
+  }
+  async function getGroqModel(){
+    if(autoModel) return autoModel;
+    const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+apiKey}});
+    if(r.status===401) throw aiErr('Your Groq API key was rejected. Check it in Settings.');
+    if(!r.ok) throw aiErr('Groq model list failed ('+r.status+').');
+    const d=await r.json();
+    const ids=(d.data||[]).map(x=>x.id).filter(id=>!/whisper|guard|tts|playai|distil|embed|vision|prompt|orpheus/i.test(id));
+    const pref=['llama-3.3-70b-versatile','llama-3.1-8b-instant'];
+    autoModel=pref.find(p=>ids.includes(p)) || ids.find(id=>/llama|gpt-oss|qwen/i.test(id)) || ids[0];
+    if(!autoModel) throw aiErr('Groq shows no usable chat model on this key.');
+    store.set('nova_model',autoModel);
+    syncNative();
+    return autoModel;
+  }
+  async function askCompat(prov){
+    const base=(provider==='custom'?customBase:prov.base).replace(/\/+$/,'');
+    if(!base) throw aiErr('Add the base URL for your custom provider in Settings.');
+    let mdl=manualModel||prov.model;
+    if(provider==='groq' && !manualModel) mdl=await getGroqModel();
+    if(!mdl) throw aiErr('Add a model name for '+prov.name+' in Settings.');
+    const res=await fetch(base+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({model:mdl,temperature:0.6,max_tokens:300,messages:[{role:'system',content:SYSTEM_PROMPT},...history]})
+    });
+    if(!res.ok) throw aiHttp(res.status,prov);
+    const data=await res.json();
+    return (data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'').trim();
+  }
+  async function askAnthropic(prov){
+    const mdl=manualModel||prov.model;
+    const msgs=history.slice(); while(msgs.length && msgs[0].role!=='user') msgs.shift();
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:mdl,max_tokens:300,system:SYSTEM_PROMPT,messages:msgs})
+    });
+    if(!res.ok) throw aiHttp(res.status,prov);
+    const data=await res.json();
+    return ((data.content||[]).map(c=>c.text||'').join(' ')).trim();
+  }
+  async function ask(text){
+    const prov=PROVIDERS[provider]||PROVIDERS.groq;
+    if(!apiKey) return 'I can handle calls, alarms, notes, maps and phone control now. For open questions, pick an AI provider and add its key in Settings.';
+    history.push({role:'user',content:text});
+    history = history.slice(-12);
+    let out;
+    try{
+      out = prov.kind==='anthropic' ? await askAnthropic(prov) : await askCompat(prov);
+    }catch(e){ if(e.ai) history.pop(); throw e; }
+    out=out||'I did not get an answer. Try again.';
+    history.push({role:'assistant',content:out});
+    return out;
+  }
+
+  async function handle(text){
+    if(!text) return;
+    add('me',text);
+    you.textContent='\u201C'+text+'\u201D';
+    cap.textContent='';
+    pushHist(text);
+    const l=await local(text);
+    if(l && typeof l==='object'){
+      add('nova',l.show); cap.textContent=l.say; speak(l.say); return;
+    }
+    if(l){ reply(l); return; }
+    setState('thinking');
+    try{ reply(await ask(text)); }
+    catch(e){
+      setState('idle');
+      reply(e && e.ai ? e.message : 'I could not reach the internet. Check your connection and try again.');
+    }
+  }
+
+
+  /* ---------- Accounts: calls to Supabase ---------- */
+  async function sb(path,o){
+    o=o||{};
+    const headers={'apikey':SB_KEY,'Content-Type':'application/json'};
+    if(o.auth && session) headers['Authorization']='Bearer '+session.access_token;
+    const ctl=new AbortController(); const tid=setTimeout(()=>ctl.abort(),15000);
+    let r;
+    try{ r=await fetch(SB_URL+path,{method:o.method||'GET',headers:headers,body:o.body?JSON.stringify(o.body):undefined,signal:ctl.signal}); }
+    catch(e){ throw new Error('I could not reach the server. Check your internet.'); }
+    finally{ clearTimeout(tid); }
+    let data=null; try{ data=await r.json(); }catch(e){}
+    if(!r.ok){
+      const msg=(data&&(data.msg||data.error_description||data.message||data.error))||('Error '+r.status);
+      const err=new Error(msg); err.status=r.status; throw err;
+    }
+    return data;
+  }
+  function sessionFrom(d,name){
+    const u=d.user||{};
+    return {access_token:d.access_token,refresh_token:d.refresh_token,expires_at:Date.now()+((d.expires_in||3600)*1000),
+      user_id:u.id,email:u.email,name:name||(u.user_metadata&&u.user_metadata.full_name)||''};
+  }
+  function niceAuthErr(e){
+    const m=(e&&e.message)||'Something went wrong.';
+    if(/invalid login/i.test(m)) return 'Wrong email or password.';
+    if(/already (been )?registered|already exists/i.test(m)) return 'That email already has an account. Log in instead.';
+    if(/not confirmed/i.test(m)) return 'Confirm your email first. Check your inbox.';
+    if(/rate limit|too many/i.test(m)) return 'Too many tries. Wait a little and try again.';
+    if(/password/i.test(m) && /(short|least|weak)/i.test(m)) return 'Choose a stronger password (8+ characters).';
+    return m;
+  }
+  async function signIn(email,pw){
+    const d=await sb('/auth/v1/token?grant_type=password',{method:'POST',body:{email:email,password:pw}});
+    saveSession(sessionFrom(d));
+  }
+  async function signUp(email,pw,name){
+    const d=await sb('/auth/v1/signup',{method:'POST',body:{email:email,password:pw,data:{full_name:name,consent:true}}});
+    if(d && d.access_token){ saveSession(sessionFrom(d,name)); return true; }
+    return false;
+  }
+  async function refreshSession(){
+    if(!session||!session.refresh_token) return;
+    if(session.expires_at-Date.now()>120000) return;
+    try{
+      const d=await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:session.refresh_token}});
+      const ns=sessionFrom(d,session.name); ns.user_id=ns.user_id||session.user_id; ns.email=ns.email||session.email;
+      saveSession(ns);
+    }catch(e){
+      if(e.status===400||e.status===401||e.status===403){ saveSession(null); isAdmin=false; show('auth'); }
+    }
+  }
+  async function afterLogin(){
+    renderProfile();
+    try{ await sb('/rest/v1/profiles?id=eq.'+session.user_id,{method:'PATCH',auth:true,body:{last_seen:new Date().toISOString()}}); }catch(e){}
+    try{ const a=await sb('/rest/v1/admins?select=user_id',{auth:true}); isAdmin=Array.isArray(a)&&a.length>0; }catch(e){ isAdmin=false; }
+    renderProfile();
+  }
+  async function signOut(){
+    try{ if(session) await sb('/auth/v1/logout',{method:'POST',auth:true}); }catch(e){}
+    saveSession(null); isAdmin=false; show('auth');
+  }
+  function renderProfile(){
+    const nm=(session&&session.name)||'Nova user', em=(session&&session.email)||'';
+    $('prName').textContent=nm; $('prEmail').textContent=em;
+    $('prAvatar').textContent=(nm.trim().charAt(0)||'N').toUpperCase();
+    $('prAdmin').style.display=isAdmin?'inline-block':'none';
+    $('prUsers').style.display=isAdmin?'flex':'none';
+    $('hiName').textContent=(nm.trim().split(/\s+/)[0])||'Nova';
+  }
+  let adminRows=[];
+  async function loadUsers(){
+    $('adCount').textContent='Loading...';
+    try{ adminRows=await sb('/rest/v1/profiles?select=email,full_name,created_at&order=created_at.desc&limit=1000',{auth:true}); if(!Array.isArray(adminRows)) adminRows=[]; }
+    catch(e){ adminRows=[]; $('adCount').textContent='Could not load'; }
+    renderUsers();
+  }
+  function renderUsers(){
+    const q=($('adSearch').value||'').toLowerCase().trim();
+    const rows=adminRows.filter(r=>!q||(r.email||'').toLowerCase().includes(q)||(r.full_name||'').toLowerCase().includes(q));
+    $('adCount').textContent=adminRows.length+(adminRows.length===1?' user':' users');
+    const box=$('adList'); box.innerHTML='';
+    if(!rows.length){ const h=document.createElement('div'); h.className='hint'; h.textContent=adminRows.length?'No match.':'No users to show. If you expect some, make sure your account is in the admins table.'; box.appendChild(h); return; }
+    rows.forEach(r=>{
+      const d=document.createElement('div'); d.className='note';
+      const w=document.createElement('div'); w.className='nt';
+      w.textContent=r.email||'';
+      const sm=document.createElement('small'); sm.textContent=(r.full_name?r.full_name+'  |  ':'')+(r.created_at?new Date(r.created_at).toLocaleDateString([], {year:'numeric',month:'short',day:'numeric'}):'');
+      w.appendChild(sm); d.appendChild(w); box.appendChild(d);
+    });
+  }
+  function copyText(t){
+    try{
+      const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); return true;
+    }catch(e){ return false; }
+  }
+
+  let authMode='login';
+  function drawAuth(){
+    const su=authMode==='signup';
+    $('auTitle').textContent= su?'Create your account':'Welcome back';
+    $('auSub').textContent= su?'Sign up to use Nova.':'Log in to use Nova.';
+    $('auName').style.display= su?'block':'none';
+    $('auConsentRow').style.display= su?'flex':'none';
+    $('auGo').textContent= su?'Create account':'Log in';
+    $('auToggle').textContent= su?'Already have an account? Log in':'New here? Create an account';
+    $('auPass').setAttribute('autocomplete', su?'new-password':'current-password');
+  }
+  async function enterApp(){ show('home'); afterLogin(); syncNative(); }
+  async function submitAuth(){
+    const email=$('auEmail').value.trim().toLowerCase(), pw=$('auPass').value, name=$('auName').value.trim();
+    const msg=$('auMsg'); msg.style.color='';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ msg.textContent='Enter a valid email address.'; return; }
+    if(pw.length<8){ msg.textContent='Your password needs at least 8 characters.'; return; }
+    if(authMode==='signup'){
+      if(!name){ msg.textContent='Enter your name.'; return; }
+      if(!$('auConsent').checked){ msg.textContent='Please agree to the Privacy Policy to continue.'; return; }
+    }
+    $('auGo').disabled=true; msg.textContent='Please wait...';
+    try{
+      if(authMode==='signup'){
+        const ok=await signUp(email,pw,name);
+        if(!ok){
+          authMode='login'; drawAuth();
+          $('auMsg').style.color='var(--y)';
+          $('auMsg').textContent='Account created. Check your email and tap the confirmation link, then log in.';
+          $('auGo').disabled=false; return;
+        }
+      } else { await signIn(email,pw); }
+      $('auPass').value=''; msg.textContent='';
+      await enterApp();
+    }catch(e){ msg.textContent=niceAuthErr(e); }
+    $('auGo').disabled=false;
+  }
+
+  /* ---------- Nova everywhere: settings and link to the native engine ---------- */
+  const NA=()=>P('NovaAssistant');
+  function syncNative(){
+    const A=NA(); if(!A) return;
+    const prov=PROVIDERS[provider]||PROVIDERS.groq;
+    const kind=prov.kind==='anthropic'?'anthropic':'openai';
+    const base=provider==='custom'?customBase:(prov.base||'');
+    const mdl=manualModel||prov.model||autoModel||(provider==='groq'?'llama-3.3-70b-versatile':'');
+    A.saveConfig({kind:kind,base:base,model:mdl,key:apiKey,sim:parseInt(store.get('nova_sim','0'),10)||0}).catch(()=>{});
+    A.setOption({name:'wakeWord',value:wakeWord}).catch(()=>{});
+  }
+  async function refreshEverywhere(){
+    const A=NA(), sec=$('evSec');
+    if(!A){ sec.style.display='none'; return; }
+    sec.style.display='flex';
+    try{
+      const st=await A.getState();
+      $('optBubble').checked=!!st.bubble; $('optVol').checked=!!st.volkey; $('optWake').checked=!!st.wake;
+      $('optAnnounce').checked=!!st.announce; $('optScreenAI').checked=st.screenAI!==false;
+      $('evStatus').textContent='Screen control: '+(st.a11y?'on':'off')+'   Message access: '+(st.notif?'on':'off')+'   Default assistant: '+(st.isDefault?'yes':'no');
+    }catch(e){}
+  }
+  function bindOpt(id,name){
+    $(id).addEventListener('change',async()=>{
+      const A=NA(); if(!A) return;
+      try{
+        await A.setOption({name:name,value:String($(id).checked)});
+        const st=await A.getState();
+        if($(id).checked && (name==='bubble'||name==='volkey') && !st.a11y) sys('This needs Screen control. Tap the Screen control button in Settings.');
+        if($(id).checked && name==='announce' && !st.notif) sys('This needs Message access. Tap the Message access button in Settings.');
+      }catch(e){ sys('I could not change that setting.'); }
+      refreshEverywhere();
+    });
+  }
+  function openPage(page){ const D=P('NovaDevice'); if(D) D.openSettings({page:page}).catch(()=>{}); }
+
+  /* Voice commands for messages and Nova everywhere */
+  function notifOff(){
+    openPage('notification_access');
+    return 'Message reading is off. I opened Notification access. Switch Nova on there. If Android says it is restricted, open Nova in App info, tap the three dots and choose Allow restricted settings.';
+  }
+  function notifCmd(t){
+    const A=NA(); if(!A) return null;
+    let m;
+    const who=t.match(/^what did (.+?) (?:say|send|write)$/);
+    if(who || /^(?:read|show|check)\s+(?:me\s+)?(?:my\s+)?(?:new\s+|latest\s+|recent\s+|unread\s+)?(?:messages|notifications|texts|sms|whatsapp(?: messages)?)$|^(?:any|do i have(?: any)?)\s+(?:new\s+)?(?:messages|notifications)$/.test(t)){
+      const msgOnly=!/notifications$/.test(t);
+      return A.recentNotifications({limit:10,messagesOnly:msgOnly}).then(r=>{
+        if(!r.enabled) return notifOff();
+        let items=r.items||[];
+        if(who){ const w=who[1].replace(/^(my|the)\s+/,'').toLowerCase(); items=items.filter(x=>(x.title||'').toLowerCase().includes(w)); }
+        if(!items.length) return who ? 'I have no recent message from '+who[1]+'.' : 'You have no new '+(msgOnly?'messages':'notifications')+'.';
+        const say=items.slice(0,3).map(x=>'From '+x.title+' on '+x.app+': '+x.text).join('. ');
+        const showTxt=items.map(x=>x.app+' - '+x.title+'\n'+x.text).join('\n\n');
+        return {say:say,show:showTxt};
+      },phoneErr);
+    }
+    if((m=t.match(/^(?:turn|switch)\s+(on|off)\s+(?:the\s+)?(floating button|bubble|hey nova|wake word|message announcements?|read(?:ing)? messages aloud|announcements?)$/))){
+      const on=m[1]==='on';
+      const map={'floating button':'bubble','bubble':'bubble','hey nova':'wake','wake word':'wake'};
+      const name=map[m[2]]||'announce';
+      return A.setOption({name:name,value:String(on)}).then(()=>'Okay. '+m[2]+' is '+(on?'on':'off')+'.',phoneErr);
+    }
+    if(/^(?:set|make)\s+nova\s+(?:as\s+)?(?:my\s+)?default (?:digital )?assistant$|^(?:set up|enable)\s+(?:default )?assistant$/.test(t)){
+      openPage('assistant');
+      return 'I opened the assistant settings. Choose Nova as your default digital assistant app.';
+    }
+    if(/^(?:enable|turn on|set up)\s+(?:message reading|notification access|message access)$/.test(t)) return notifOff();
+    return null;
+  }
+
+  /* ---------- Wiring ---------- */
+  function listenNow(){
+    if(NATIVE){ if(speaking){ synth.cancel(); return; } nativeListen(); return; }
+    if(speaking){ synth.cancel(); return; }
+    if(recActive){ stopRec(); setState('idle'); return; }
+    tapMode=true; awaiting=false; stopRec(); startRec();
+  }
+  function stopAll(){
+    try{ if(synth) synth.cancel(); }catch(e){}
+    stopRec(); awaiting=false; tapMode=false; speaking=false;
+    setState('idle'); show('home');
+  }
+  mic.addEventListener('click',listenNow);
+  $('cmic').addEventListener('click',listenNow);
+  $('vstop').addEventListener('click',stopAll);
+
+  function sendTyped(){
+    const v=$('txt').value.trim(); if(!v) return;
+    $('txt').value=''; handle(v);
+  }
+  $('send').addEventListener('click',sendTyped);
+  $('txt').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); sendTyped(); } });
+
+  function addTyped(){
+    const v=$('ntxt').value.trim(); if(!v) return;
+    $('ntxt').value=''; addNote(v);
+  }
+  $('nadd').addEventListener('click',addTyped);
+  $('ntxt').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); addTyped(); } });
+
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
+    const t=b.getAttribute('data-t');
+    show(b.getAttribute('data-go'));
+    if(t!==null && t!==undefined){ const i=$('txt'); i.value=t; setTimeout(()=>i.focus(),60); }
+  }));
+
+  ['gear','gear2','gear3','gear4'].forEach(id=>$(id).addEventListener('click',openSheet));
+  $('sheetbg').addEventListener('click',closeSheet);
+
+  $('accCustom').addEventListener('input',()=>{ theme.accent=$('accCustom').value; saveTheme(); applyTheme(); });
+  $('bgPick').addEventListener('click',()=>$('bgFile').click());
+  $('bgFile').addEventListener('change',()=>{ const f=$('bgFile').files&&$('bgFile').files[0]; pickPhoto(f); $('bgFile').value=''; });
+  $('bgClear').addEventListener('click',()=>{ theme.img=''; store.set('nova_bgimg',''); applyTheme(); });
+
+  $('save').addEventListener('click',()=>{
+    provider=$('prov').value; store.set('nova_provider',provider);
+    apiKey=$('key').value.trim(); store.set('nova_key_'+provider,apiKey);
+    manualModel=$('mdl').value.trim(); store.set('nova_mdl_'+provider,manualModel);
+    if(provider==='custom'){ customBase=$('base').value.trim(); store.set('nova_base',customBase); }
+    autoModel=''; store.set('nova_model','');
+    history=[];
+    wakeWord=($('wakeword').value.trim().toLowerCase()||'nova'); store.set('nova_wakeword',wakeWord);
+    wakeOn=$('wake').checked; store.set('nova_wake',wakeOn?'1':'0');
+    store.set('nova_sim',$('sim').value);
+    syncNative();
+    closeSheet();
+    stopRec(); tapMode=false;
+    if(wakeOn){ sys('Hands-free on. Say "'+wakeWord+'" followed by your request.'); startRec(); }
+    else setState('idle');
+  });
+
+  $('auGo').addEventListener('click',submitAuth);
+  $('auPass').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submitAuth(); } });
+  $('auToggle').addEventListener('click',()=>{ authMode=authMode==='login'?'signup':'login'; $('auMsg').textContent=''; drawAuth(); });
+  $('auPrivLink').addEventListener('click',e=>{ e.preventDefault(); $('privSheet').classList.add('open'); });
+  $('prPrivacy').addEventListener('click',()=>$('privSheet').classList.add('open'));
+  $('privClose').addEventListener('click',()=>$('privSheet').classList.remove('open'));
+  $('privBg').addEventListener('click',()=>$('privSheet').classList.remove('open'));
+  $('prSettings').addEventListener('click',openSheet);
+  $('prUsers').addEventListener('click',()=>show('admin'));
+  $('prLogout').addEventListener('click',signOut);
+  $('adSearch').addEventListener('input',renderUsers);
+  $('adCopy').addEventListener('click',()=>{
+    const ok=copyText(adminRows.map(r=>r.email).join('\n'));
+    $('adCount').textContent= ok ? 'Copied '+adminRows.length+' emails' : 'Could not copy';
+    setTimeout(renderUsers,1800);
+  });
+  bindOpt('optBubble','bubble'); bindOpt('optVol','volkey'); bindOpt('optWake','wake');
+  bindOpt('optAnnounce','announce'); bindOpt('optScreenAI','screenAI');
+  $('evA11y').addEventListener('click',()=>openPage('accessibility'));
+  $('evNotif').addEventListener('click',()=>openPage('notification_access'));
+  $('evAssist').addEventListener('click',()=>openPage('assistant'));
+  $('evOverlay').addEventListener('click',()=>openPage('overlay'));
+
+  /* ---------- Onboarding ---------- */
+  const SLIDES=[
+    ['You Talk.<br>Nova Does.','Smart. Fast. Personal. Nova helps you call, chat, search and control your phone.'],
+    ['Just Say It.','Call Dad, set an alarm, find the nearest hospital or write a note. Use your voice or type it.'],
+    ['Ask Me<br>Anything.','Pick an AI provider and add your key in Settings and Nova answers your open questions too.']
+  ];
+  let si=0;
+  function drawSlide(){
+    $('onbT').innerHTML=SLIDES[si][0];
+    $('onbP').textContent=SLIDES[si][1];
+    document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i===si));
+  }
+  function finishOnb(){ store.set('nova_onb','1'); show('home'); }
+  $('onbNext').addEventListener('click',()=>{ if(si<SLIDES.length-1){ si++; drawSlide(); } else finishOnb(); });
+  $('onbSkip').addEventListener('click',finishOnb);
+
+  if(NATIVE){ const wr=$('wake').closest('.row'); if(wr) wr.style.display='none'; }
+  $('accCustom').value=theme.accent;
+  applyTheme();
+  renderHist();
+  syncNative();
+  if(session){ renderProfile(); refreshSession().then(()=>{ if(session) afterLogin(); }); }
+  show(store.get('nova_onb','0')==='1' ? 'home' : 'onb');
+  if(!SR && !NATIVE) sys('Voice input needs Chrome. You can still type requests.');
+  else if(!NATIVE && !window.isSecureContext) sys('Voice needs a secure page. Open this from localhost or an https link.');
+})();
+</script>
+</body>
+</html>

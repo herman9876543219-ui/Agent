@@ -26,6 +26,7 @@ jobs:
       - name: Create Capacitor project
         run: |
           mkdir -p www assets
+          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Nova</title><meta name="viewport" content="width=device-width"></head><body><div id="root"></div><script src="app.js"></script></body></html>' > www/index.html
           cp icon-only.png icon-foreground.png icon-background.png assets/
           npm init -y
           npm install --legacy-peer-deps @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/app-launcher@7 @capacitor/geolocation@7 @capacitor-community/contacts@7 @capacitor-community/speech-recognition@7

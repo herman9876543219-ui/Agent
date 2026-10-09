@@ -421,7 +421,7 @@ jobs:
                 case BatteryManager.BATTERY_HEALTH_DEAD: return "Dead";
                 case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE: return "Over voltage";
                 case BatteryManager.BATTERY_HEALTH_COLD: return "Cold";
-                case BatteryManager.BATTERY_HEALTH_UNSPECIFIC_FAILURE: return "Failure";
+                case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: return "Failure";
                 default: return "Unknown";
               }
             }

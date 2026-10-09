@@ -420,7 +420,7 @@ jobs:
                 case BatteryManager.BATTERY_HEALTH_DEAD: return "Dead";
                 case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE: return "Over voltage";
                 case BatteryManager.BATTERY_HEALTH_COLD: return "Cold";
-                case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE: return "Failure";
+                case BatteryManager.BATTERY_HEALTH_UNSPECIFIC_FAILURE: return "Failure";
                 default: return "Unknown";
               }
             }
@@ -1296,6 +1296,8 @@ jobs:
           import android.content.pm.PackageManager;
           import android.content.pm.ResolveInfo;
           import android.database.Cursor;
+          import android.media.AudioAttributes;
+          import android.media.MediaPlayer;
           import android.net.Uri;
           import android.os.BatteryManager;
           import android.os.Bundle;
@@ -1313,6 +1315,8 @@ jobs:
           import android.widget.Toast;
           import androidx.core.content.ContextCompat;
           import java.io.BufferedReader;
+          import java.io.File;
+          import java.io.FileOutputStream;
           import java.io.InputStream;
           import java.io.InputStreamReader;
           import java.io.OutputStream;
@@ -1364,6 +1368,8 @@ jobs:
             private String screenText = "";
             private String screenApp = "";
             private long lastAnnounce = 0;
+            private MediaPlayer player;
+            private int speakToken = 0;
 
             private NovaEngine(Context c) {
               ctx = c;
@@ -1420,6 +1426,8 @@ jobs:
                     if (tts != null) tts.stop();
                   } catch (Exception ignored) {
                   }
+                  speakToken++;
+                  stopPlayer();
                   destroyRec();
                   busy = false;
                   state("idle");
@@ -1730,6 +1738,9 @@ jobs:
                 return "I need an AI provider and key. Open Nova, go to Settings, and save one.";
               }
               String system = "You are Nova, a voice assistant on the user's phone. Your reply is spoken aloud, so answer in one to four short sentences of plain text. No markdown, lists or emojis.";
+              if ("orpheus".equals(p.getString("voice_engine", "phone")) && !p.getString("tts_key", "").isEmpty() && p.getBoolean("expressive", false)) {
+                system += " Your voice can show feeling. You may start a sentence with one short vocal direction in square brackets, such as [warm], [cheerful], [excited], [whisper], [sigh] or [laughing], but only when it really fits, never in every sentence, and never more than one per reply.";
+              }
               String user = userText;
               if (!screen.isEmpty()) {
                 user = userText + "\n\nThe user is looking at the app \"" + app
@@ -1804,7 +1815,7 @@ jobs:
 
             private void finish(final String reply) {
               state("speaking");
-              toast(reply);
+              toast(plain(reply));
               speak(reply, new Runnable() {
                 @Override
                 public void run() {
@@ -1838,10 +1849,232 @@ jobs:
                 @Override
                 public void run() {
                   state("speaking");
-                  ensureTts();
-                  speakWhenReady(text, done, 0);
+                  SharedPreferences p = prefs();
+                  boolean orpheus = "orpheus".equals(p.getString("voice_engine", "phone"))
+                      && !p.getString("tts_key", "").isEmpty();
+                  if (orpheus) {
+                    speakOrpheus(text, done);
+                  } else {
+                    ensureTts();
+                    speakWhenReady(text, done, 0);
+                  }
                 }
               });
+            }
+
+            /* ---------------- Nova's own voice (Orpheus on Groq) ---------------- */
+
+            /** Text with vocal directions like [warm] and markdown removed, for screens and the phone voice. */
+            private String plain(String t) {
+              return t.replaceAll("\\[[^\\]]{1,40}\\]", " ").replaceAll("[*_`#>]", "").replaceAll("\\s+", " ").trim();
+            }
+
+            private String fixBrackets(String s) {
+              int o = 0;
+              int c = 0;
+              for (int i = 0; i < s.length(); i++) {
+                if (s.charAt(i) == '[') o++;
+                if (s.charAt(i) == ']') c++;
+              }
+              return o == c ? s : s.replaceAll("[\\[\\]]", "");
+            }
+
+            /** Groq accepts at most 200 characters per request, so long replies are cut at sentence ends. */
+            private List<String> chunk(String raw) {
+              String t = raw.replaceAll("[*_`#>]", "").replaceAll("\\s+", " ").trim();
+              List<String> pieces = new ArrayList<>();
+              if (t.isEmpty()) return pieces;
+              Matcher m = Pattern.compile("[^.!?]+[.!?]*\\s*").matcher(t);
+              while (m.find()) {
+                String s = m.group().trim();
+                if (s.isEmpty()) continue;
+                if (s.length() <= 190) {
+                  pieces.add(s);
+                  continue;
+                }
+                StringBuilder line = new StringBuilder();
+                for (String w : s.split(" ")) {
+                  if (line.length() > 0 && line.length() + 1 + w.length() > 190) {
+                    pieces.add(line.toString());
+                    line.setLength(0);
+                  }
+                  if (line.length() > 0) line.append(' ');
+                  line.append(w);
+                }
+                if (line.length() > 0) pieces.add(line.toString());
+              }
+              List<String> out = new ArrayList<>();
+              StringBuilder cur = new StringBuilder();
+              for (String p : pieces) {
+                if (cur.length() > 0 && cur.length() + 1 + p.length() > 190) {
+                  out.add(fixBrackets(cur.toString()));
+                  cur.setLength(0);
+                }
+                if (cur.length() > 0) cur.append(' ');
+                cur.append(p);
+              }
+              if (cur.length() > 0) out.add(fixBrackets(cur.toString()));
+              return out;
+            }
+
+            private void purgeCache() {
+              try {
+                File[] old = ctx.getCacheDir().listFiles();
+                if (old != null) {
+                  for (File f : old) {
+                    if (f.getName().startsWith("nova_tts")) f.delete();
+                  }
+                }
+              } catch (Exception ignored) {
+              }
+            }
+
+            private void deleteAll(List<File> files) {
+              for (File f : files) {
+                try {
+                  f.delete();
+                } catch (Exception ignored) {
+                }
+              }
+            }
+
+            private void stopPlayer() {
+              if (player != null) {
+                try {
+                  player.stop();
+                } catch (Exception ignored) {
+                }
+                try {
+                  player.release();
+                } catch (Exception ignored) {
+                }
+                player = null;
+              }
+            }
+
+            private File fetchSpeech(String text, String voice, String key) throws Exception {
+              JSONObject body = new JSONObject();
+              body.put("model", "canopylabs/orpheus-v1-english");
+              body.put("input", text);
+              body.put("voice", voice);
+              body.put("response_format", "wav");
+              HttpURLConnection c = (HttpURLConnection) new URL("https://api.groq.com/openai/v1/audio/speech").openConnection();
+              c.setRequestMethod("POST");
+              c.setConnectTimeout(10000);
+              c.setReadTimeout(30000);
+              c.setDoOutput(true);
+              c.setRequestProperty("Content-Type", "application/json");
+              c.setRequestProperty("Authorization", "Bearer " + key);
+              OutputStream os = c.getOutputStream();
+              os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+              os.close();
+              int code = c.getResponseCode();
+              if (code >= 300) {
+                c.disconnect();
+                throw new Exception("tts " + code);
+              }
+              File f = File.createTempFile("nova_tts", ".wav", ctx.getCacheDir());
+              InputStream is = c.getInputStream();
+              FileOutputStream fo = new FileOutputStream(f);
+              byte[] buf = new byte[8192];
+              int n;
+              while ((n = is.read(buf)) > 0) fo.write(buf, 0, n);
+              fo.close();
+              is.close();
+              c.disconnect();
+              if (f.length() < 100) {
+                f.delete();
+                throw new Exception("empty audio");
+              }
+              return f;
+            }
+
+            private void speakOrpheus(final String text, final Runnable done) {
+              final String key = prefs().getString("tts_key", "");
+              final String voice = prefs().getString("voice_name", "autumn");
+              List<String> all = chunk(text);
+              final List<String> parts = all.size() > 3 ? new ArrayList<String>(all.subList(0, 3)) : all;
+              if (parts.isEmpty()) {
+                if (done != null) done.run();
+                return;
+              }
+              final int my = ++speakToken;
+              net.execute(new Runnable() {
+                @Override
+                public void run() {
+                  final List<File> files = new ArrayList<>();
+                  boolean ok = true;
+                  try {
+                    purgeCache();
+                    for (String c : parts) files.add(fetchSpeech(c, voice, key));
+                  } catch (Exception e) {
+                    ok = false;
+                  }
+                  final boolean good = ok;
+                  main.post(new Runnable() {
+                    @Override
+                    public void run() {
+                      if (my != speakToken) {
+                        deleteAll(files);
+                        return;
+                      }
+                      if (good && !files.isEmpty()) {
+                        playFiles(files, 0, done);
+                      } else {
+                        deleteAll(files);
+                        ensureTts();
+                        speakWhenReady(text, done, 0);
+                      }
+                    }
+                  });
+                }
+              });
+            }
+
+            private void playFiles(final List<File> files, final int idx, final Runnable done) {
+              if (idx >= files.size()) {
+                deleteAll(files);
+                if (done != null) done.run();
+                return;
+              }
+              try {
+                final MediaPlayer mp = new MediaPlayer();
+                player = mp;
+                mp.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build());
+                mp.setDataSource(files.get(idx).getAbsolutePath());
+                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                  @Override
+                  public void onCompletion(MediaPlayer m) {
+                    try {
+                      m.release();
+                    } catch (Exception ignored) {
+                    }
+                    if (player == m) player = null;
+                    playFiles(files, idx + 1, done);
+                  }
+                });
+                mp.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                  @Override
+                  public boolean onError(MediaPlayer m, int what, int extra) {
+                    try {
+                      m.release();
+                    } catch (Exception ignored) {
+                    }
+                    if (player == m) player = null;
+                    deleteAll(files);
+                    if (done != null) done.run();
+                    return true;
+                  }
+                });
+                mp.prepare();
+                mp.start();
+              } catch (Exception e) {
+                deleteAll(files);
+                if (done != null) done.run();
+              }
             }
 
             private void speakWhenReady(final String text, final Runnable done, final int tries) {
@@ -1855,7 +2088,7 @@ jobs:
                     if (done != null) main.post(done);
                   }
                 });
-                String clean = text.replaceAll("[*_`#>]", "").replaceAll("\\s+", " ").trim();
+                String clean = plain(text);
                 tts.speak(clean, TextToSpeech.QUEUE_FLUSH, null, "nova");
               } else if (tries < 8) {
                 main.postDelayed(new Runnable() {
@@ -2216,6 +2449,10 @@ jobs:
                   .putString("cfg_base", call.getString("base", ""))
                   .putString("cfg_model", call.getString("model", ""))
                   .putString("cfg_key", call.getString("key", ""))
+                  .putString("tts_key", call.getString("ttsKey", ""))
+                  .putString("voice_engine", call.getString("voiceEngine", "phone"))
+                  .putString("voice_name", call.getString("voice", "autumn"))
+                  .putBoolean("expressive", call.getBoolean("expressive", false))
                   .putInt("sim", call.getInt("sim", 0))
                   .apply();
               call.resolve();
